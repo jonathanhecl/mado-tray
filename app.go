@@ -63,6 +63,18 @@ func (a *App) ToggleScript(id string, isActive bool) ([]Script, error) {
 	return a.store.ToggleScript(id, isActive)
 }
 
+func (a *App) AddScript(input ScriptInput) ([]Script, error) {
+	return a.store.AddScript(input)
+}
+
+func (a *App) UpdateScript(id string, input ScriptInput) ([]Script, error) {
+	return a.store.UpdateScript(id, input)
+}
+
+func (a *App) DeleteScript(id string) ([]Script, error) {
+	return a.store.DeleteScript(id)
+}
+
 func (a *App) RunScript(id string) error {
 	script, err := a.store.FindScript(id)
 	if err != nil {

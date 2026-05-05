@@ -1,30 +1,125 @@
 import "./style.css";
-import {
-  DisableStartup,
-  EnableStartup,
-  GetScripts,
-  GetStartupStatus,
-  RunScript,
-  ToggleScript
-} from "../wailsjs/go/main/App";
 import type { main } from "../wailsjs/go/models";
-import { WindowHide } from "../wailsjs/runtime/runtime";
+
+type Locale = "es" | "en";
+type BackendMethod =
+  | "AddScript"
+  | "DeleteScript"
+  | "DisableStartup"
+  | "EnableStartup"
+  | "GetScripts"
+  | "GetStartupStatus"
+  | "RunScript"
+  | "ToggleScript"
+  | "UpdateScript";
+type ScriptForm = {
+  name: string;
+  path: string;
+  is_active: boolean;
+};
 
 type State = {
   scripts: main.Script[];
   startup: main.StartupStatus | null;
+  locale: Locale;
+  form: ScriptForm;
+  editingId: string | null;
+  isFormOpen: boolean;
   loading: boolean;
   busyScriptId: string | null;
+  formBusy: boolean;
   startupBusy: boolean;
   error: string;
   notice: string;
 };
 
+type Dictionary = Record<string, string>;
+
+const dictionaries: Record<Locale, Dictionary> = {
+  es: {
+    addProcess: "Agregar proceso",
+    appConfigured: "Mado-Tray quedó configurado para abrir al iniciar macOS.",
+    appRemoved: "Mado-Tray fue removido del arranque de macOS.",
+    backendUnavailable: "El backend de Wails todavía no está disponible.",
+    cancel: "Cancelar",
+    confirmDelete: "¿Eliminar este proceso de Mado-Tray?",
+    delete: "Eliminar",
+    edit: "Editar",
+    editingProcess: "Editando proceso",
+    empty: "No hay procesos configurados todavía.",
+    enabledAtStartup: "Mado-Tray ya está registrado como ítem de inicio.",
+    hideWindow: "Ocultar ventana",
+    language: "Idioma",
+    loading: "Cargando configuración...",
+    macStartup: "Abrir al iniciar macOS",
+    manualRunNotice: "Terminal.app abrió el proceso seleccionado.",
+    name: "Nombre",
+    namePlaceholder: "API local",
+    path: "Ruta",
+    pathPlaceholder: "/Users/tu_usuario/Proyectos/api/start.sh",
+    processAdded: "Proceso agregado.",
+    processDeleted: "Proceso eliminado.",
+    processes: "Procesos",
+    processSaved: "Proceso guardado.",
+    reload: "Recargar",
+    reviewingStartup: "Revisando estado del sistema...",
+    runNow: "Ejecutar ahora",
+    running: "Abriendo...",
+    saveChanges: "Guardar cambios",
+    startupDisabled: "Activa este switch para registrar la app como ítem de inicio.",
+    startupManager: "Gestor de arranque macOS",
+    startWithMac: "Activo al iniciar",
+    validationName: "Ingresa un nombre para el proceso.",
+    validationPath: "Ingresa una ruta absoluta al script o ejecutable."
+  },
+  en: {
+    addProcess: "Add process",
+    appConfigured: "Mado-Tray is configured to open when macOS starts.",
+    appRemoved: "Mado-Tray was removed from macOS startup.",
+    backendUnavailable: "The Wails backend is not available yet.",
+    cancel: "Cancel",
+    confirmDelete: "Delete this process from Mado-Tray?",
+    delete: "Delete",
+    edit: "Edit",
+    editingProcess: "Editing process",
+    empty: "No processes configured yet.",
+    enabledAtStartup: "Mado-Tray is already registered as a login item.",
+    hideWindow: "Hide window",
+    language: "Language",
+    loading: "Loading configuration...",
+    macStartup: "Open at macOS startup",
+    manualRunNotice: "Terminal.app opened the selected process.",
+    name: "Name",
+    namePlaceholder: "Local API",
+    path: "Path",
+    pathPlaceholder: "/Users/your_user/Projects/api/start.sh",
+    processAdded: "Process added.",
+    processDeleted: "Process deleted.",
+    processes: "Processes",
+    processSaved: "Process saved.",
+    reload: "Reload",
+    reviewingStartup: "Checking system status...",
+    runNow: "Run now",
+    running: "Opening...",
+    saveChanges: "Save changes",
+    startupDisabled: "Enable this switch to register the app as a login item.",
+    startupManager: "macOS startup manager",
+    startWithMac: "Active on startup",
+    validationName: "Enter a process name.",
+    validationPath: "Enter an absolute path to the script or executable."
+  }
+};
+
 const state: State = {
   scripts: [],
   startup: null,
+  locale: loadLocale(),
+  form: emptyForm(),
+  editingId: null,
+  isFormOpen: false,
   loading: true,
   busyScriptId: null,
+  formBusy: false,
   startupBusy: false,
   error: "",
   notice: ""
@@ -44,11 +139,19 @@ async function load(): Promise<void> {
   render();
 
   try {
-    const [scripts, startup] = await Promise.all([GetScripts(), GetStartupStatus()]);
-    state.scripts = scripts;
+    const [scripts, startup] = await Promise.all([
+      callBackend<main.Script[]>("GetScripts"),
+      callBackend<main.StartupStatus>("GetStartupStatus")
+    ]);
+    state.scripts = Array.isArray(scripts) ? scripts : [];
     state.startup = startup;
   } catch (error) {
-    state.error = errorMessage(error);
+    if (isBackendUnavailable(error)) {
+      state.scripts = [];
+      state.startup = unavailableStartupStatus();
+    } else {
+      state.error = errorMessage(error);
+    }
   } finally {
     state.loading = false;
     render();
@@ -60,10 +163,19 @@ function render(): void {
     <main class="panel">
       <header class="header">
         <div>
-          <p class="eyebrow">Gestor de arranque macOS</p>
+          <p class="eyebrow">${t("startupManager")}</p>
           <h1>Mado-Tray</h1>
         </div>
-        <button class="icon-button" data-action="hide" title="Ocultar ventana">×</button>
+        <div class="header-actions">
+          <label class="language-select">
+            <span>${t("language")}</span>
+            <select data-action="change-locale">
+              <option value="es" ${state.locale === "es" ? "selected" : ""}>ES</option>
+              <option value="en" ${state.locale === "en" ? "selected" : ""}>EN</option>
+            </select>
+          </label>
+          <button class="icon-button" data-action="hide" title="${t("hideWindow")}">×</button>
+        </div>
       </header>
 
       ${state.error ? `<p class="message error">${escapeHtml(state.error)}</p>` : ""}
@@ -71,7 +183,7 @@ function render(): void {
 
       <section class="startup-card">
         <div>
-          <h2>Abrir al iniciar macOS</h2>
+          <h2>${t("macStartup")}</h2>
           <p>${startupDescription()}</p>
         </div>
         <label class="switch">
@@ -87,23 +199,79 @@ function render(): void {
 
       <section class="scripts">
         <div class="section-title">
-          <h2>Procesos</h2>
-          <button class="ghost-button" data-action="reload" ${state.loading ? "disabled" : ""}>Recargar</button>
+          <h2>${t("processes")}</h2>
+          <div class="section-actions">
+            <button class="primary-button" data-action="open-add-process">${t("addProcess")}</button>
+            <button class="ghost-button" data-action="reload" ${state.loading ? "disabled" : ""}>${t("reload")}</button>
+          </div>
         </div>
 
         ${renderScripts()}
       </section>
+
+      ${state.isFormOpen ? renderFormModal() : ""}
     </main>
+  `;
+}
+
+function renderFormModal(): string {
+  const isEditing = state.editingId !== null;
+
+  return `
+    <div class="modal-backdrop" data-action="close-form">
+      <section class="form-card modal" role="dialog" aria-modal="true" aria-labelledby="process-form-title">
+        <div class="modal-header">
+          <h2 id="process-form-title">${isEditing ? t("editingProcess") : t("addProcess")}</h2>
+          <button class="icon-button" type="button" data-action="close-form" title="${t("cancel")}">×</button>
+        </div>
+        <form data-action="script-form">
+          <label class="field">
+            <span>${t("name")}</span>
+            <input
+              name="name"
+              type="text"
+              value="${escapeHtml(state.form.name)}"
+              placeholder="${t("namePlaceholder")}"
+              ${state.formBusy ? "disabled" : ""}
+            />
+          </label>
+
+          <label class="field">
+            <span>${t("path")}</span>
+            <input
+              name="path"
+              type="text"
+              value="${escapeHtml(state.form.path)}"
+              placeholder="${t("pathPlaceholder")}"
+              ${state.formBusy ? "disabled" : ""}
+            />
+          </label>
+
+          <div class="form-row">
+            <label class="inline-check">
+              <input name="is_active" type="checkbox" ${state.form.is_active ? "checked" : ""} ${state.formBusy ? "disabled" : ""} />
+              <span>${t("startWithMac")}</span>
+            </label>
+            <div class="form-actions">
+              <button class="ghost-button" type="button" data-action="close-form" ${state.formBusy ? "disabled" : ""}>${t("cancel")}</button>
+              <button class="primary-button" type="submit" ${state.formBusy ? "disabled" : ""}>
+                ${isEditing ? t("saveChanges") : t("addProcess")}
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
   `;
 }
 
 function renderScripts(): string {
   if (state.loading) {
-    return `<p class="empty">Cargando configuración...</p>`;
+    return `<p class="empty">${t("loading")}</p>`;
   }
 
   if (state.scripts.length === 0) {
-    return `<p class="empty">No hay procesos configurados todavía.</p>`;
+    return `<p class="empty">${t("empty")}</p>`;
   }
 
   return `
@@ -134,8 +302,12 @@ function renderScript(script: main.Script): string {
           <span></span>
         </label>
       </div>
+      <div class="script-actions">
+        <button class="ghost-button" data-action="edit-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>${t("edit")}</button>
+        <button class="danger-button" data-action="delete-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>${t("delete")}</button>
+      </div>
       <button class="run-button" data-action="run-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>
-        ${busy ? "Abriendo..." : "Ejecutar ahora"}
+        ${busy ? t("running") : t("runNow")}
       </button>
     </li>
   `;
@@ -143,7 +315,7 @@ function renderScript(script: main.Script): string {
 
 function startupDescription(): string {
   if (!state.startup) {
-    return "Revisando estado del sistema...";
+    return t("reviewingStartup");
   }
 
   if (!state.startup.available) {
@@ -151,8 +323,8 @@ function startupDescription(): string {
   }
 
   return state.startup.enabled
-    ? "Mado-Tray ya está registrado como ítem de inicio."
-    : "Activa este switch para registrar la app como ítem de inicio.";
+    ? t("enabledAtStartup")
+    : t("startupDisabled");
 }
 
 appRoot.addEventListener("click", async (event) => {
@@ -165,12 +337,47 @@ appRoot.addEventListener("click", async (event) => {
   }
 
   if (action === "hide") {
-    WindowHide();
+    window.runtime?.WindowHide?.();
     return;
   }
 
   if (action === "reload") {
     await load();
+    return;
+  }
+
+  if (action === "open-add-process") {
+    state.isFormOpen = true;
+    state.editingId = null;
+    state.form = emptyForm();
+    state.error = "";
+    state.notice = "";
+    render();
+    return;
+  }
+
+  if (action === "close-form") {
+    if (button.classList.contains("modal-backdrop") && target.closest(".modal")) {
+      return;
+    }
+    resetForm();
+    render();
+    return;
+  }
+
+  if (action === "edit-script") {
+    const id = button.dataset.id;
+    if (id) {
+      startEditing(id);
+    }
+    return;
+  }
+
+  if (action === "delete-script") {
+    const id = button.dataset.id;
+    if (id) {
+      await deleteScript(id);
+    }
     return;
   }
 
@@ -196,6 +403,23 @@ appRoot.addEventListener("change", async (event) => {
   if (action === "toggle-startup") {
     await toggleStartup(input.checked);
   }
+
+  if (action === "change-locale") {
+    const locale = input.value === "en" ? "en" : "es";
+    state.locale = locale;
+    localStorage.setItem("mado-tray-locale", locale);
+    render();
+  }
+});
+
+appRoot.addEventListener("submit", async (event) => {
+  const form = event.target as HTMLFormElement;
+  if (form.dataset.action !== "script-form") {
+    return;
+  }
+
+  event.preventDefault();
+  await submitScriptForm(form);
 });
 
 async function toggleScript(id: string, isActive: boolean): Promise<void> {
@@ -205,11 +429,95 @@ async function toggleScript(id: string, isActive: boolean): Promise<void> {
   render();
 
   try {
-    state.scripts = await ToggleScript(id, isActive);
+    state.scripts = await callBackend<main.Script[]>("ToggleScript", id, isActive);
   } catch (error) {
     state.error = errorMessage(error);
     await load();
     return;
+  } finally {
+    state.busyScriptId = null;
+    render();
+  }
+}
+
+async function submitScriptForm(form: HTMLFormElement): Promise<void> {
+  const formData = new FormData(form);
+  const input = {
+    name: String(formData.get("name") ?? "").trim(),
+    path: String(formData.get("path") ?? "").trim(),
+    is_active: formData.get("is_active") === "on"
+  };
+  state.form = input;
+
+  if (!input.name) {
+    state.error = t("validationName");
+    state.notice = "";
+    render();
+    return;
+  }
+
+  if (!input.path) {
+    state.error = t("validationPath");
+    state.notice = "";
+    render();
+    return;
+  }
+
+  state.formBusy = true;
+  state.error = "";
+  state.notice = "";
+  render();
+
+  try {
+    state.scripts = state.editingId
+      ? await callBackend<main.Script[]>("UpdateScript", state.editingId, input)
+      : await callBackend<main.Script[]>("AddScript", input);
+    state.notice = state.editingId ? t("processSaved") : t("processAdded");
+    resetForm();
+  } catch (error) {
+    state.error = errorMessage(error);
+  } finally {
+    state.formBusy = false;
+    render();
+  }
+}
+
+function startEditing(id: string): void {
+  const script = state.scripts.find((item) => item.id === id);
+  if (!script) {
+    return;
+  }
+
+  state.editingId = id;
+  state.isFormOpen = true;
+  state.form = {
+    name: script.name,
+    path: script.path,
+    is_active: script.is_active
+  };
+  state.error = "";
+  state.notice = "";
+  render();
+}
+
+async function deleteScript(id: string): Promise<void> {
+  if (!confirm(t("confirmDelete"))) {
+    return;
+  }
+
+  state.busyScriptId = id;
+  state.error = "";
+  state.notice = "";
+  render();
+
+  try {
+    state.scripts = await callBackend<main.Script[]>("DeleteScript", id);
+    if (state.editingId === id) {
+      resetForm();
+    }
+    state.notice = t("processDeleted");
+  } catch (error) {
+    state.error = errorMessage(error);
   } finally {
     state.busyScriptId = null;
     render();
@@ -223,8 +531,8 @@ async function runScript(id: string): Promise<void> {
   render();
 
   try {
-    await RunScript(id);
-    state.notice = "Terminal.app abrió el proceso seleccionado.";
+    await callBackend<void>("RunScript", id);
+    state.notice = t("manualRunNotice");
   } catch (error) {
     state.error = errorMessage(error);
   } finally {
@@ -240,17 +548,68 @@ async function toggleStartup(enabled: boolean): Promise<void> {
   render();
 
   try {
-    state.startup = enabled ? await EnableStartup() : await DisableStartup();
-    state.notice = enabled
-      ? "Mado-Tray quedó configurado para abrir al iniciar macOS."
-      : "Mado-Tray fue removido del arranque de macOS.";
+    state.startup = enabled
+      ? await callBackend<main.StartupStatus>("EnableStartup")
+      : await callBackend<main.StartupStatus>("DisableStartup");
+    state.notice = enabled ? t("appConfigured") : t("appRemoved");
   } catch (error) {
     state.error = errorMessage(error);
-    state.startup = await GetStartupStatus();
+    state.startup = await callBackend<main.StartupStatus>("GetStartupStatus");
   } finally {
     state.startupBusy = false;
     render();
   }
+}
+
+function resetForm(): void {
+  state.editingId = null;
+  state.isFormOpen = false;
+  state.form = emptyForm();
+}
+
+function emptyForm(): ScriptForm {
+  return {
+    name: "",
+    path: "",
+    is_active: false
+  };
+}
+
+function loadLocale(): Locale {
+  const savedLocale = localStorage.getItem("mado-tray-locale");
+  if (savedLocale === "es" || savedLocale === "en") {
+    return savedLocale;
+  }
+
+  return navigator.language.toLowerCase().startsWith("es") ? "es" : "en";
+}
+
+function t(key: string): string {
+  return dictionaries[state.locale][key] ?? key;
+}
+
+async function callBackend<T>(method: BackendMethod, ...args: unknown[]): Promise<T> {
+  const app = window.go?.main?.App;
+  const fn = app?.[method];
+
+  if (!fn) {
+    throw new Error(t("backendUnavailable"));
+  }
+
+  return (await fn(...args)) as T;
+}
+
+function isBackendUnavailable(error: unknown): boolean {
+  return error instanceof Error && error.message === t("backendUnavailable");
+}
+
+function unavailableStartupStatus(): main.StartupStatus {
+  return {
+    enabled: false,
+    app_path: "",
+    available: false,
+    message: t("reviewingStartup")
+  } as main.StartupStatus;
 }
 
 function errorMessage(error: unknown): string {

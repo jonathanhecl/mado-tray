@@ -19,10 +19,10 @@ func main() {
 
 	err = wails.Run(&options.App{
 		Title:            "Mado-Tray",
-		Width:            400,
-		Height:           500,
+		Width:            440,
+		Height:           640,
 		MinWidth:         360,
-		MinHeight:        420,
+		MinHeight:        520,
 		Frameless:        true,
 		DisableResize:    true,
 		Assets:           assets,

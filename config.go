@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+	"unicode"
 )
 
 const (
@@ -16,6 +18,12 @@ const (
 
 type Script struct {
 	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	IsActive bool   `json:"is_active"`
+}
+
+type ScriptInput struct {
 	Name     string `json:"name"`
 	Path     string `json:"path"`
 	IsActive bool   `json:"is_active"`
@@ -65,6 +73,70 @@ func (s *ConfigStore) ToggleScript(id string, isActive bool) ([]Script, error) {
 	for index := range scripts {
 		if scripts[index].ID == id {
 			scripts[index].IsActive = isActive
+			return scripts, s.saveConfigLocked(scripts)
+		}
+	}
+
+	return nil, fmt.Errorf("no existe un script con id %q", id)
+}
+
+func (s *ConfigStore) AddScript(input ScriptInput) ([]Script, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	script, err := validateScriptInput(input)
+	if err != nil {
+		return nil, err
+	}
+
+	scripts, err := s.loadConfigLocked()
+	if err != nil {
+		return nil, err
+	}
+
+	script.ID = nextScriptID(scripts, script.Name)
+	scripts = append(scripts, script)
+
+	return scripts, s.saveConfigLocked(scripts)
+}
+
+func (s *ConfigStore) UpdateScript(id string, input ScriptInput) ([]Script, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	updated, err := validateScriptInput(input)
+	if err != nil {
+		return nil, err
+	}
+
+	scripts, err := s.loadConfigLocked()
+	if err != nil {
+		return nil, err
+	}
+
+	for index := range scripts {
+		if scripts[index].ID == id {
+			updated.ID = id
+			scripts[index] = updated
+			return scripts, s.saveConfigLocked(scripts)
+		}
+	}
+
+	return nil, fmt.Errorf("no existe un script con id %q", id)
+}
+
+func (s *ConfigStore) DeleteScript(id string) ([]Script, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	scripts, err := s.loadConfigLocked()
+	if err != nil {
+		return nil, err
+	}
+
+	for index := range scripts {
+		if scripts[index].ID == id {
+			scripts = append(scripts[:index], scripts[index+1:]...)
 			return scripts, s.saveConfigLocked(scripts)
 		}
 	}
@@ -166,4 +238,63 @@ func defaultScripts() []Script {
 			IsActive: false,
 		},
 	}
+}
+
+func validateScriptInput(input ScriptInput) (Script, error) {
+	name := strings.TrimSpace(input.Name)
+	if name == "" {
+		return Script{}, fmt.Errorf("el nombre del proceso es obligatorio")
+	}
+
+	path := strings.TrimSpace(input.Path)
+	if path == "" {
+		return Script{}, fmt.Errorf("la ruta del proceso es obligatoria")
+	}
+
+	return Script{
+		Name:     name,
+		Path:     path,
+		IsActive: input.IsActive,
+	}, nil
+}
+
+func nextScriptID(scripts []Script, name string) string {
+	base := slugify(name)
+	if base == "" {
+		base = "process"
+	}
+
+	used := make(map[string]bool, len(scripts))
+	for _, script := range scripts {
+		used[script.ID] = true
+	}
+
+	if !used[base] {
+		return base
+	}
+
+	for suffix := 2; ; suffix++ {
+		candidate := fmt.Sprintf("%s-%d", base, suffix)
+		if !used[candidate] {
+			return candidate
+		}
+	}
+}
+
+func slugify(value string) string {
+	var builder strings.Builder
+	lastDash := false
+
+	for _, char := range strings.ToLower(value) {
+		switch {
+		case unicode.IsLetter(char) || unicode.IsDigit(char):
+			builder.WriteRune(char)
+			lastDash = false
+		case !lastDash:
+			builder.WriteRune('-')
+			lastDash = true
+		}
+	}
+
+	return strings.Trim(builder.String(), "-")
 }

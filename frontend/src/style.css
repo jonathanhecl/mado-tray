@@ -21,7 +21,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -64,6 +65,31 @@ input:disabled {
   letter-spacing: -0.04em;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  --wails-draggable: no-drag;
+}
+
+.language-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.language-select select {
+  border: 0;
+  border-radius: 10px;
+  padding: 7px 8px;
+  color: #e2e8f0;
+  background: rgba(148, 163, 184, 0.12);
+}
+
 .eyebrow {
   color: #93a4b8;
   font-size: 12px;
@@ -103,11 +129,91 @@ input:disabled {
 }
 
 .startup-card,
+.form-card,
 .script-item {
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 18px;
   background: rgba(15, 23, 42, 0.72);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+}
+
+.form-card {
+  padding: 16px;
+}
+
+.form-card h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(2, 6, 23, 0.68);
+  backdrop-filter: blur(10px);
+  --wails-draggable: no-drag;
+}
+
+.modal {
+  width: min(100%, 390px);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.field span,
+.inline-check {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.field input {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  padding: 10px 11px;
+  color: #edf2f7;
+  outline: none;
+  background: rgba(2, 6, 23, 0.36);
+}
+
+.field input:focus {
+  border-color: rgba(99, 102, 241, 0.75);
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.inline-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-actions,
+.script-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .startup-card {
@@ -143,10 +249,18 @@ input:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
+.section-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .ghost-button,
+.danger-button,
+.primary-button,
 .run-button {
   border: 0;
   border-radius: 12px;
@@ -154,9 +268,23 @@ input:disabled {
   background: rgba(148, 163, 184, 0.12);
 }
 
-.ghost-button {
+.ghost-button,
+.danger-button,
+.primary-button {
   padding: 7px 10px;
   font-size: 12px;
+}
+
+.primary-button {
+  border: 0;
+  font-weight: 700;
+  background: #4f46e5;
+}
+
+.danger-button {
+  border: 0;
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.42);
 }
 
 .script-list {

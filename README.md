@@ -10,7 +10,9 @@ Está construido con Go, Wails y un frontend TypeScript liviano.
 - Ejecuta automáticamente al iniciar la app todos los scripts con `is_active: true`.
 - Abre los procesos en Terminal.app usando AppleScript, no como procesos ocultos.
 - Permite activar/desactivar scripts y guardar el cambio en JSON.
+- Permite crear y editar procesos desde un modal de la interfaz, además de eliminarlos.
 - Incluye botón `Ejecutar ahora` para lanzar cualquier script manualmente.
+- Soporta interfaz en español e inglés con selector `ES/EN`.
 - Incluye switch `Abrir al iniciar macOS` para agregar o remover `Mado-Tray.app` de los ítems de inicio.
 - Se muestra como panel flotante sin bordes y se controla desde el systray.
 - Incluye `LSUIElement` en `build/darwin/Info.plist` para no aparecer en el Dock al empaquetar.
@@ -53,7 +55,15 @@ En modo desarrollo, el switch `Abrir al iniciar macOS` puede mostrar un mensaje 
 
 ## Configuración de procesos
 
-La configuración vive en:
+Puedes administrar los procesos desde la interfaz:
+
+1. Presiona `Agregar proceso`.
+2. Completa `Nombre` y `Ruta` en el modal.
+3. Activa `Activo al iniciar` si quieres que se ejecute cuando abra Mado-Tray.
+4. Guarda el proceso.
+5. Usa `Editar` o `Eliminar` en cada proceso cuando necesites cambiarlo.
+
+La configuración también vive como JSON editable en:
 
 ```text
 ~/.config/mado-tray/config.json
@@ -103,6 +113,10 @@ El script debe tener permisos de ejecución:
 ```sh
 chmod +x /Users/tu_usuario/Proyectos/api/start.sh
 ```
+
+## Idioma
+
+La interfaz arranca en inglés por defecto. Si el sistema reporta español, Mado-Tray usa español automáticamente. También incluye un selector `ES/EN` en la parte superior; la preferencia se guarda localmente en el navegador embebido de Wails, así que se mantiene entre sesiones.
 
 ## Arranque con macOS
 
