@@ -13,7 +13,7 @@ Está construido con Go, Wails y un frontend TypeScript liviano.
 - Permite crear y editar procesos desde un modal de la interfaz, además de eliminarlos.
 - Incluye botón `Ejecutar ahora` para lanzar cualquier script manualmente.
 - Soporta interfaz en español e inglés con selector `ES/EN`.
-- Incluye switch `Abrir al iniciar macOS` para agregar o remover `Mado-Tray.app` de los ítems de inicio.
+- Incluye opción `Abrir al iniciar macOS` dentro del modal de opciones para agregar o remover `Mado-Tray.app` de los ítems de inicio.
 - Se muestra como panel flotante sin bordes y se controla desde el systray.
 - Incluye `LSUIElement` en `build/darwin/Info.plist` para no aparecer en el Dock al empaquetar.
 
@@ -51,7 +51,7 @@ Ejecuta la app en modo desarrollo:
 wails dev
 ```
 
-En modo desarrollo, el switch `Abrir al iniciar macOS` puede mostrar un mensaje indicando que todavía no existe una `.app` final. Ese control está pensado para funcionar desde la app empaquetada.
+En modo desarrollo, la opción `Abrir al iniciar macOS` puede mostrar un mensaje indicando que todavía no existe una `.app` final. Ese control está pensado para funcionar desde la app empaquetada.
 
 ## Configuración de procesos
 
@@ -120,7 +120,7 @@ La interfaz arranca en inglés por defecto. Si el sistema reporta español, Mado
 
 ## Arranque con macOS
 
-Desde la interfaz, usa el switch `Abrir al iniciar macOS`.
+Desde la interfaz, abre `Opciones` y usa el switch `Abrir al iniciar macOS`.
 
 Cuando lo activas, Mado-Tray registra la `.app` actual como login item de macOS usando `System Events`. Cuando lo desactivas, elimina ese login item.
 
@@ -129,7 +129,7 @@ Para que funcione correctamente:
 1. Compila la app.
 2. Mueve `Mado-Tray.app` a `/Applications` o a una carpeta estable.
 3. Abre esa app empaquetada.
-4. Activa `Abrir al iniciar macOS`.
+4. Abre `Opciones` y activa `Abrir al iniciar macOS`.
 
 Si mueves la `.app` después de registrarla, desactiva y vuelve a activar el switch.
 
@@ -167,7 +167,7 @@ Checklist sugerido para publicar:
    - carga de `config.json`;
    - toggle de procesos;
    - botón `Ejecutar ahora`;
-   - switch `Abrir al iniciar macOS`;
+   - opción `Abrir al iniciar macOS`;
    - menú del systray.
 5. Crear un tag, por ejemplo:
 

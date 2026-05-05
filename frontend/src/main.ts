@@ -25,6 +25,7 @@ type State = {
   form: ScriptForm;
   editingId: string | null;
   isFormOpen: boolean;
+  isOptionsOpen: boolean;
   loading: boolean;
   busyScriptId: string | null;
   formBusy: boolean;
@@ -55,6 +56,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     manualRunNotice: "Terminal.app abrió el proceso seleccionado.",
     name: "Nombre",
     namePlaceholder: "API local",
+    options: "Opciones",
     path: "Ruta",
     pathPlaceholder: "/Users/tu_usuario/Proyectos/api/start.sh",
     processAdded: "Proceso agregado.",
@@ -91,6 +93,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     manualRunNotice: "Terminal.app opened the selected process.",
     name: "Name",
     namePlaceholder: "Local API",
+    options: "Options",
     path: "Path",
     pathPlaceholder: "/Users/your_user/Projects/api/start.sh",
     processAdded: "Process added.",
@@ -117,6 +120,7 @@ const state: State = {
   form: emptyForm(),
   editingId: null,
   isFormOpen: false,
+  isOptionsOpen: false,
   loading: true,
   busyScriptId: null,
   formBusy: false,
@@ -167,6 +171,7 @@ function render(): void {
           <h1>Mado-Tray</h1>
         </div>
         <div class="header-actions">
+          <button class="ghost-button" data-action="open-options">${t("options")}</button>
           <label class="language-select">
             <span>${t("language")}</span>
             <select data-action="change-locale">
@@ -181,22 +186,6 @@ function render(): void {
       ${state.error ? `<p class="message error">${escapeHtml(state.error)}</p>` : ""}
       ${state.notice ? `<p class="message notice">${escapeHtml(state.notice)}</p>` : ""}
 
-      <section class="startup-card">
-        <div>
-          <h2>${t("macStartup")}</h2>
-          <p>${startupDescription()}</p>
-        </div>
-        <label class="switch">
-          <input
-            type="checkbox"
-            data-action="toggle-startup"
-            ${state.startup?.enabled ? "checked" : ""}
-            ${state.startupBusy || !state.startup?.available ? "disabled" : ""}
-          />
-          <span></span>
-        </label>
-      </section>
-
       <section class="scripts">
         <div class="section-title">
           <h2>${t("processes")}</h2>
@@ -210,7 +199,37 @@ function render(): void {
       </section>
 
       ${state.isFormOpen ? renderFormModal() : ""}
+      ${state.isOptionsOpen ? renderOptionsModal() : ""}
     </main>
+  `;
+}
+
+function renderOptionsModal(): string {
+  return `
+    <div class="modal-backdrop" data-action="close-options">
+      <section class="form-card modal" role="dialog" aria-modal="true" aria-labelledby="options-title">
+        <div class="modal-header">
+          <h2 id="options-title">${t("options")}</h2>
+          <button class="icon-button" type="button" data-action="close-options" title="${t("cancel")}">×</button>
+        </div>
+
+        <div class="settings-row">
+          <div>
+            <h3>${t("macStartup")}</h3>
+            <p>${startupDescription()}</p>
+          </div>
+          <label class="switch">
+            <input
+              type="checkbox"
+              data-action="toggle-startup"
+              ${state.startup?.enabled ? "checked" : ""}
+              ${state.startupBusy || !state.startup?.available ? "disabled" : ""}
+            />
+            <span></span>
+          </label>
+        </div>
+      </section>
+    </div>
   `;
 }
 
@@ -343,6 +362,23 @@ appRoot.addEventListener("click", async (event) => {
 
   if (action === "reload") {
     await load();
+    return;
+  }
+
+  if (action === "open-options") {
+    state.isOptionsOpen = true;
+    state.error = "";
+    state.notice = "";
+    render();
+    return;
+  }
+
+  if (action === "close-options") {
+    if (button.classList.contains("modal-backdrop") && target.closest(".modal")) {
+      return;
+    }
+    state.isOptionsOpen = false;
+    render();
     return;
   }
 

@@ -128,7 +128,6 @@ input:disabled {
   background: rgba(20, 83, 45, 0.42);
 }
 
-.startup-card,
 .form-card,
 .script-item {
   border: 1px solid rgba(148, 163, 184, 0.16);
@@ -216,29 +215,31 @@ input:disabled {
   gap: 8px;
 }
 
-.startup-card {
+.settings-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 16px;
-  margin-bottom: 22px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.28);
 }
 
-.startup-card h2,
-.startup-card p,
+.settings-row h3,
+.settings-row p,
 .section-title h2,
 .script-main h3,
 .script-main p {
   margin: 0;
 }
 
-.startup-card h2,
+.settings-row h3,
 .section-title h2 {
   font-size: 15px;
 }
 
-.startup-card p {
+.settings-row p {
   margin-top: 6px;
   color: #94a3b8;
   font-size: 12px;
