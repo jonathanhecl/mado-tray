@@ -138,13 +138,21 @@ If you move the `.app` after registering it, disable and enable the switch again
 Build the app:
 
 ```sh
-wails build
+npm run build:app
 ```
 
 The output is:
 
 ```text
 build/bin/Mado-Tray.app
+```
+
+The build script runs `npm install`, `go mod tidy`, `npm run build`, and `wails build`, then verifies that the final `.app` bundle exists.
+
+You can also run Wails directly if you only need the packaging step:
+
+```sh
+wails build
 ```
 
 The `build/darwin/Info.plist` template already includes:
