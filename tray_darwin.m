@@ -2,53 +2,72 @@
 #import <dispatch/dispatch.h>
 
 extern void madoTrayToggle(void);
-extern void madoTrayQuit(void);
 
 @interface MadoTrayMenuTarget : NSObject
 - (void)toggle:(id)sender;
-- (void)quit:(id)sender;
 @end
 
 @implementation MadoTrayMenuTarget
 - (void)toggle:(id)sender {
   madoTrayToggle();
 }
-
-- (void)quit:(id)sender {
-  madoTrayQuit();
-}
 @end
 
 static NSStatusItem *madoTrayStatusItem;
 static MadoTrayMenuTarget *madoTrayTarget;
 
+static NSImage *MadoTrayIcon(void) {
+  if (@available(macOS 11.0, *)) {
+    NSImage *image = [NSImage imageWithSystemSymbolName:@"macwindow"
+                               accessibilityDescription:@"Mado-Tray"];
+    image.template = YES;
+    return image;
+  }
+
+  return nil;
+}
+
+static void MadoTrayEnsureTarget(void) {
+  if (madoTrayTarget == nil) {
+    madoTrayTarget = [[MadoTrayMenuTarget alloc] init];
+  }
+}
+
 void MadoTrayCreate(void) {
   dispatch_async(dispatch_get_main_queue(), ^{
+    MadoTrayEnsureTarget();
+  });
+}
+
+void MadoTrayShow(void) {
+  dispatch_async(dispatch_get_main_queue(), ^{
+    MadoTrayEnsureTarget();
+
     if (madoTrayStatusItem != nil) {
       return;
     }
 
-    madoTrayTarget = [[MadoTrayMenuTarget alloc] init];
     madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
-    madoTrayStatusItem.button.title = @"Mado";
     madoTrayStatusItem.button.toolTip = @"Mado-Tray";
+    madoTrayStatusItem.button.target = madoTrayTarget;
+    madoTrayStatusItem.button.action = @selector(toggle:);
 
-    NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Mado-Tray"];
+    NSImage *image = MadoTrayIcon();
+    if (image != nil) {
+      madoTrayStatusItem.button.image = image;
+    } else {
+      madoTrayStatusItem.button.title = @"▣";
+    }
+  });
+}
 
-    NSMenuItem *toggleItem = [[NSMenuItem alloc] initWithTitle:@"Mostrar / ocultar"
-                                                        action:@selector(toggle:)
-                                                 keyEquivalent:@""];
-    [toggleItem setTarget:madoTrayTarget];
-    [menu addItem:toggleItem];
+void MadoTrayHide(void) {
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (madoTrayStatusItem == nil) {
+      return;
+    }
 
-    [menu addItem:[NSMenuItem separatorItem]];
-
-    NSMenuItem *quitItem = [[NSMenuItem alloc] initWithTitle:@"Salir"
-                                                      action:@selector(quit:)
-                                               keyEquivalent:@""];
-    [quitItem setTarget:madoTrayTarget];
-    [menu addItem:quitItem];
-
-    madoTrayStatusItem.menu = menu;
+    [[NSStatusBar systemStatusBar] removeStatusItem:madoTrayStatusItem];
+    madoTrayStatusItem = nil;
   });
 }

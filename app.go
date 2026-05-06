@@ -33,7 +33,11 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.mu.Unlock()
 
-	initTray(a)
+	a.mu.Lock()
+	visible := a.visible
+	a.mu.Unlock()
+
+	initTray(a, !visible)
 
 	scripts, err := a.store.LoadConfig()
 	if err != nil {
@@ -109,10 +113,12 @@ func (a *App) ToggleWindow() {
 
 	if visible {
 		wailsruntime.WindowHide(ctx)
+		showTrayIcon()
 		return
 	}
 
 	wailsruntime.WindowShow(ctx)
+	hideTrayIcon()
 }
 
 func (a *App) HideWindow() {
@@ -121,9 +127,14 @@ func (a *App) HideWindow() {
 	a.visible = false
 	a.mu.Unlock()
 
-	if ctx != nil {
+	status, err := GetStartupStatus()
+	if err == nil && status.Enabled && ctx != nil {
 		wailsruntime.WindowHide(ctx)
+		showTrayIcon()
+		return
 	}
+
+	a.Quit()
 }
 
 func (a *App) ShowWindow() {
@@ -134,6 +145,7 @@ func (a *App) ShowWindow() {
 
 	if ctx != nil {
 		wailsruntime.WindowShow(ctx)
+		hideTrayIcon()
 	}
 }
 
@@ -162,5 +174,6 @@ func (a *App) beforeClose(ctx context.Context) bool {
 	a.mu.Unlock()
 
 	wailsruntime.WindowHide(ctx)
+	showTrayIcon()
 	return true
 }

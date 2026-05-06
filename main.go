@@ -33,6 +33,12 @@ func main() {
 		BackgroundColour: &options.RGBA{R: 18, G: 22, B: 30, A: 1},
 		OnStartup:        app.startup,
 		OnBeforeClose:    app.beforeClose,
+		SingleInstanceLock: &options.SingleInstanceLock{
+			UniqueId: "com.jonathanhecl.mado-tray",
+			OnSecondInstanceLaunch: func(_ options.SecondInstanceData) {
+				app.ShowWindow()
+			},
+		},
 		Bind: []interface{}{
 			app,
 		},
