@@ -24,6 +24,7 @@ type State = {
   locale: Locale;
   form: ScriptForm;
   editingId: string | null;
+  deleteCandidateId: string | null;
   isFormOpen: boolean;
   isOptionsOpen: boolean;
   loading: boolean;
@@ -44,6 +45,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     backendUnavailable: "El backend de Wails todavía no está disponible.",
     cancel: "Cancelar",
     confirmDelete: "¿Eliminar este proceso de Mado-Tray?",
+    confirmDeleteTitle: "Eliminar proceso",
     delete: "Eliminar",
     edit: "Editar",
     editingProcess: "Editando proceso",
@@ -81,6 +83,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     backendUnavailable: "The Wails backend is not available yet.",
     cancel: "Cancel",
     confirmDelete: "Delete this process from Mado-Tray?",
+    confirmDeleteTitle: "Delete process",
     delete: "Delete",
     edit: "Edit",
     editingProcess: "Editing process",
@@ -119,6 +122,7 @@ const state: State = {
   locale: loadLocale(),
   form: emptyForm(),
   editingId: null,
+  deleteCandidateId: null,
   isFormOpen: false,
   isOptionsOpen: false,
   loading: true,
@@ -200,7 +204,30 @@ function render(): void {
 
       ${state.isFormOpen ? renderFormModal() : ""}
       ${state.isOptionsOpen ? renderOptionsModal() : ""}
+      ${state.deleteCandidateId ? renderDeleteModal() : ""}
     </main>
+  `;
+}
+
+function renderDeleteModal(): string {
+  const script = state.scripts.find((item) => item.id === state.deleteCandidateId);
+  const name = script?.name ?? "";
+
+  return `
+    <div class="modal-backdrop" data-action="close-delete">
+      <section class="form-card modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+        <div class="modal-header">
+          <h2 id="delete-title">${t("confirmDeleteTitle")}</h2>
+          <button class="icon-button" type="button" data-action="close-delete" title="${t("cancel")}">×</button>
+        </div>
+        <p class="modal-copy">${t("confirmDelete")}</p>
+        ${name ? `<p class="delete-target">${escapeHtml(name)}</p>` : ""}
+        <div class="modal-actions">
+          <button class="ghost-button" type="button" data-action="close-delete">${t("cancel")}</button>
+          <button class="danger-button" type="button" data-action="confirm-delete" ${state.busyScriptId ? "disabled" : ""}>${t("delete")}</button>
+        </div>
+      </section>
+    </div>
   `;
 }
 
@@ -412,7 +439,26 @@ appRoot.addEventListener("click", async (event) => {
   if (action === "delete-script") {
     const id = button.dataset.id;
     if (id) {
-      await deleteScript(id);
+      state.deleteCandidateId = id;
+      state.error = "";
+      state.notice = "";
+      render();
+    }
+    return;
+  }
+
+  if (action === "close-delete") {
+    if (button.classList.contains("modal-backdrop") && target.closest(".modal")) {
+      return;
+    }
+    state.deleteCandidateId = null;
+    render();
+    return;
+  }
+
+  if (action === "confirm-delete") {
+    if (state.deleteCandidateId) {
+      await deleteScript(state.deleteCandidateId);
     }
     return;
   }
@@ -537,10 +583,6 @@ function startEditing(id: string): void {
 }
 
 async function deleteScript(id: string): Promise<void> {
-  if (!confirm(t("confirmDelete"))) {
-    return;
-  }
-
   state.busyScriptId = id;
   state.error = "";
   state.notice = "";
@@ -551,6 +593,7 @@ async function deleteScript(id: string): Promise<void> {
     if (state.editingId === id) {
       resetForm();
     }
+    state.deleteCandidateId = null;
     state.notice = t("processDeleted");
   } catch (error) {
     state.error = errorMessage(error);

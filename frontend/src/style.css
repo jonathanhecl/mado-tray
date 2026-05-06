@@ -169,6 +169,29 @@ input:disabled {
   margin-bottom: 14px;
 }
 
+.modal-copy {
+  margin: 0 0 12px;
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.delete-target {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.3);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .field {
   display: grid;
   gap: 7px;
