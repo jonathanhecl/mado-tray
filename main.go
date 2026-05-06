@@ -17,6 +17,9 @@ func main() {
 		log.Fatal(err)
 	}
 
+	startHidden := shouldStartHidden()
+	app.visible = !startHidden
+
 	err = wails.Run(&options.App{
 		Title:            "Mado-Tray",
 		Width:            440,
@@ -25,6 +28,7 @@ func main() {
 		MinHeight:        520,
 		Frameless:        true,
 		DisableResize:    true,
+		StartHidden:      startHidden,
 		Assets:           assets,
 		BackgroundColour: &options.RGBA{R: 18, G: 22, B: 30, A: 1},
 		OnStartup:        app.startup,
@@ -36,4 +40,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func shouldStartHidden() bool {
+	status, err := GetStartupStatus()
+	if err != nil {
+		return false
+	}
+
+	return status.Enabled
 }

@@ -125,6 +125,8 @@ From the UI, open `Options` and use the `Open at macOS startup` switch.
 
 When enabled, Mado-Tray registers the current `.app` as a macOS login item using `System Events`. When disabled, it removes that login item.
 
+When macOS starts and launches Mado-Tray as a login item, the app starts hidden in the menu bar and still runs every active process.
+
 When startup is enabled, closing the app window hides it in the menu bar. Use the menu bar item to show the window again.
 
 For this to work correctly:
