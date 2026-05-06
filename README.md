@@ -15,6 +15,7 @@ It is built with Go, Wails, and a lightweight TypeScript frontend.
 - Supports English and Spanish through an `ES/EN` selector.
 - Includes an `Open at macOS startup` option inside the Options modal to add or remove `Mado-Tray.app` from login items.
 - Uses a frameless floating panel controlled from the menu bar.
+- When macOS startup is enabled, closing the window hides it in the menu bar instead of quitting the app.
 - Includes `LSUIElement` in `build/darwin/Info.plist` so the packaged app does not appear in the Dock.
 
 ## Requirements
@@ -123,6 +124,8 @@ The interface starts in English by default. If the system reports Spanish, Mado-
 From the UI, open `Options` and use the `Open at macOS startup` switch.
 
 When enabled, Mado-Tray registers the current `.app` as a macOS login item using `System Events`. When disabled, it removes that login item.
+
+When startup is enabled, closing the app window hides it in the menu bar. Use the menu bar item to show the window again.
 
 For this to work correctly:
 

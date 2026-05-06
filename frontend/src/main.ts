@@ -9,6 +9,7 @@ type BackendMethod =
   | "EnableStartup"
   | "GetScripts"
   | "GetStartupStatus"
+  | "HideWindow"
   | "RunScript"
   | "ToggleScript"
   | "UpdateScript";
@@ -383,7 +384,11 @@ appRoot.addEventListener("click", async (event) => {
   }
 
   if (action === "hide") {
-    window.runtime?.WindowHide?.();
+    try {
+      await callBackend<void>("HideWindow");
+    } catch {
+      window.runtime?.WindowHide?.();
+    }
     return;
   }
 

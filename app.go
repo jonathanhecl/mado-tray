@@ -115,6 +115,17 @@ func (a *App) ToggleWindow() {
 	wailsruntime.WindowShow(ctx)
 }
 
+func (a *App) HideWindow() {
+	a.mu.Lock()
+	ctx := a.ctx
+	a.visible = false
+	a.mu.Unlock()
+
+	if ctx != nil {
+		wailsruntime.WindowHide(ctx)
+	}
+}
+
 func (a *App) ShowWindow() {
 	a.mu.Lock()
 	ctx := a.ctx
@@ -137,4 +148,19 @@ func (a *App) Quit() {
 	}
 
 	os.Exit(0)
+}
+
+func (a *App) beforeClose(ctx context.Context) bool {
+	status, err := GetStartupStatus()
+	if err != nil || !status.Enabled {
+		return false
+	}
+
+	a.mu.Lock()
+	a.ctx = ctx
+	a.visible = false
+	a.mu.Unlock()
+
+	wailsruntime.WindowHide(ctx)
+	return true
 }

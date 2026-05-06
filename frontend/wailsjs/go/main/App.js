@@ -26,6 +26,10 @@ export function GetStartupStatus() {
   return window['go']['main']['App']['GetStartupStatus']();
 }
 
+export function HideWindow() {
+  return window['go']['main']['App']['HideWindow']();
+}
+
 export function Quit() {
   return window['go']['main']['App']['Quit']();
 }

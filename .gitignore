@@ -41,5 +41,6 @@ build/bin/
 .env
 
 # Editor/IDE
+.DS_Store
 # .idea/
 # .vscode/
