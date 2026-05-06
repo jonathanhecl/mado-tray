@@ -1,192 +1,192 @@
 # Mado-Tray
 
-Mado-Tray es un gestor de procesos para el arranque de macOS. Vive en la barra superior, permite activar o desactivar scripts desde un panel pequeño y abre cada proceso en una ventana visible de Terminal.app para que puedas inspeccionarlo, detenerlo con `Ctrl+C` o interactuar con él manualmente.
+Mado-Tray is a startup process manager for macOS. It lives in the menu bar, lets you enable or disable scripts from a small panel, and opens each process in a visible Terminal.app window so you can inspect it, stop it with `Ctrl+C`, or interact with it manually.
 
-Está construido con Go, Wails y un frontend TypeScript liviano.
+It is built with Go, Wails, and a lightweight TypeScript frontend.
 
-## Funcionalidades
+## Features
 
-- Lee la configuración desde `~/.config/mado-tray/config.json`.
-- Ejecuta automáticamente al iniciar la app todos los scripts con `is_active: true`.
-- Abre los procesos en Terminal.app usando AppleScript, no como procesos ocultos.
-- Permite activar/desactivar scripts y guardar el cambio en JSON.
-- Permite crear y editar procesos desde un modal de la interfaz, además de eliminarlos.
-- Incluye botón `Ejecutar ahora` para lanzar cualquier script manualmente.
-- Soporta interfaz en español e inglés con selector `ES/EN`.
-- Incluye opción `Abrir al iniciar macOS` dentro del modal de opciones para agregar o remover `Mado-Tray.app` de los ítems de inicio.
-- Se muestra como panel flotante sin bordes y se controla desde el systray.
-- Incluye `LSUIElement` en `build/darwin/Info.plist` para no aparecer en el Dock al empaquetar.
+- Reads configuration from `~/.config/mado-tray/config.json`.
+- Automatically runs all scripts with `is_active: true` when the app starts.
+- Opens processes in Terminal.app using AppleScript instead of hiding them in the background.
+- Lets you enable or disable scripts and persist the change to JSON.
+- Lets you create, edit, and delete processes from the UI.
+- Includes a `Run now` button to launch any script manually.
+- Supports English and Spanish through an `ES/EN` selector.
+- Includes an `Open at macOS startup` option inside the Options modal to add or remove `Mado-Tray.app` from login items.
+- Uses a frameless floating panel controlled from the menu bar.
+- Includes `LSUIElement` in `build/darwin/Info.plist` so the packaged app does not appear in the Dock.
 
-## Requisitos
+## Requirements
 
 - macOS.
-- Go 1.23 o superior.
-- Node.js 20 o superior recomendado.
+- Go 1.23 or newer.
+- Node.js 20 or newer recommended.
 - Wails CLI v2.
 
-Instala Wails si no lo tienes:
+Install Wails if you do not have it:
 
 ```sh
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 ```
 
-Verifica el entorno:
+Check your environment:
 
 ```sh
 wails doctor
 ```
 
-## Desarrollo
+## Development
 
-Instala dependencias:
+Install dependencies:
 
 ```sh
 npm install
 go mod tidy
 ```
 
-Ejecuta la app en modo desarrollo:
+Run the app in development mode:
 
 ```sh
 wails dev
 ```
 
-En modo desarrollo, la opción `Abrir al iniciar macOS` puede mostrar un mensaje indicando que todavía no existe una `.app` final. Ese control está pensado para funcionar desde la app empaquetada.
+In development mode, the `Open at macOS startup` option may show a message indicating that there is no final `.app` bundle yet. That control is intended to work from the packaged app.
 
-## Configuración de procesos
+## Process Configuration
 
-Puedes administrar los procesos desde la interfaz:
+You can manage processes from the UI:
 
-1. Presiona `Agregar proceso`.
-2. Completa `Nombre` y `Ruta` en el modal.
-3. Activa `Activo al iniciar` si quieres que se ejecute cuando abra Mado-Tray.
-4. Guarda el proceso.
-5. Usa `Editar` o `Eliminar` en cada proceso cuando necesites cambiarlo.
+1. Press `Add process`.
+2. Fill in `Name` and `Path` in the modal.
+3. Enable `Active on startup` if you want it to run when Mado-Tray opens.
+4. Save the process.
+5. Use `Edit` or `Delete` on each process whenever you need to change it.
 
-La configuración también vive como JSON editable en:
+The configuration also lives as an editable JSON file at:
 
 ```text
 ~/.config/mado-tray/config.json
 ```
 
-Si el archivo no existe, Mado-Tray lo crea con un ejemplo inicial:
+If the file does not exist, Mado-Tray creates it with an initial example:
 
 ```json
 [
   {
     "id": "example",
-    "name": "Script de ejemplo",
-    "path": "/ruta/a/tu/script.sh",
+    "name": "Example script",
+    "path": "/path/to/your/script.sh",
     "is_active": false
   }
 ]
 ```
 
-Campos:
+Fields:
 
-- `id`: identificador único del proceso.
-- `name`: nombre visible en la interfaz.
-- `path`: ruta absoluta al script o ejecutable.
-- `is_active`: si es `true`, Mado-Tray lo abre automáticamente al iniciar.
+- `id`: unique process identifier.
+- `name`: display name in the UI.
+- `path`: absolute path to the script or executable.
+- `is_active`: when `true`, Mado-Tray opens it automatically on startup.
 
-Ejemplo real:
+Real example:
 
 ```json
 [
   {
     "id": "api-local",
     "name": "API local",
-    "path": "/Users/tu_usuario/Proyectos/api/start.sh",
+    "path": "/Users/your_user/Projects/api/start.sh",
     "is_active": true
   },
   {
     "id": "worker",
     "name": "Worker",
-    "path": "/Users/tu_usuario/Proyectos/worker/run.sh",
+    "path": "/Users/your_user/Projects/worker/run.sh",
     "is_active": false
   }
 ]
 ```
 
-El script debe tener permisos de ejecución:
+The script must have executable permissions:
 
 ```sh
-chmod +x /Users/tu_usuario/Proyectos/api/start.sh
+chmod +x /Users/your_user/Projects/api/start.sh
 ```
 
-## Idioma
+## Language
 
-La interfaz arranca en inglés por defecto. Si el sistema reporta español, Mado-Tray usa español automáticamente. También incluye un selector `ES/EN` en la parte superior; la preferencia se guarda localmente en el navegador embebido de Wails, así que se mantiene entre sesiones.
+The interface starts in English by default. If the system reports Spanish, Mado-Tray uses Spanish automatically. It also includes an `ES/EN` selector at the top; the preference is stored locally in Wails' embedded browser and persists across sessions.
 
-## Arranque con macOS
+## macOS Startup
 
-Desde la interfaz, abre `Opciones` y usa el switch `Abrir al iniciar macOS`.
+From the UI, open `Options` and use the `Open at macOS startup` switch.
 
-Cuando lo activas, Mado-Tray registra la `.app` actual como login item de macOS usando `System Events`. Cuando lo desactivas, elimina ese login item.
+When enabled, Mado-Tray registers the current `.app` as a macOS login item using `System Events`. When disabled, it removes that login item.
 
-Para que funcione correctamente:
+For this to work correctly:
 
-1. Compila la app.
-2. Mueve `Mado-Tray.app` a `/Applications` o a una carpeta estable.
-3. Abre esa app empaquetada.
-4. Abre `Opciones` y activa `Abrir al iniciar macOS`.
+1. Build the app.
+2. Move `Mado-Tray.app` to `/Applications` or another stable folder.
+3. Open that packaged app.
+4. Open `Options` and enable `Open at macOS startup`.
 
-Si mueves la `.app` después de registrarla, desactiva y vuelve a activar el switch.
+If you move the `.app` after registering it, disable and enable the switch again.
 
 ## Build
 
-Genera la app:
+Build the app:
 
 ```sh
 wails build
 ```
 
-El resultado queda en:
+The output is:
 
 ```text
 build/bin/Mado-Tray.app
 ```
 
-La plantilla `build/darwin/Info.plist` ya incluye:
+The `build/darwin/Info.plist` template already includes:
 
 ```xml
 <key>LSUIElement</key>
 <true/>
 ```
 
-Eso hace que Mado-Tray no aparezca en el Dock y viva principalmente en la barra superior.
+This keeps Mado-Tray out of the Dock and makes it live primarily in the menu bar.
 
-## Publicación en GitHub
+## Publishing on GitHub
 
-Checklist sugerido para publicar:
+Suggested release checklist:
 
-1. Ejecutar `npm install` y `go mod tidy`.
-2. Ejecutar `npm run build`.
-3. Ejecutar `wails build`.
-4. Abrir `build/bin/Mado-Tray.app` y probar:
-   - carga de `config.json`;
-   - toggle de procesos;
-   - botón `Ejecutar ahora`;
-   - opción `Abrir al iniciar macOS`;
-   - menú del systray.
-5. Crear un tag, por ejemplo:
+1. Run `npm install` and `go mod tidy`.
+2. Run `npm run build`.
+3. Run `wails build`.
+4. Open `build/bin/Mado-Tray.app` and test:
+   - `config.json` loading;
+   - process toggles;
+   - `Run now` button;
+   - `Open at macOS startup` option;
+   - menu bar menu.
+5. Create a tag, for example:
 
 ```sh
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-6. Crear un release en GitHub y adjuntar la app empaquetada o un `.dmg` si decides distribuirla así.
+6. Create a GitHub release and attach the packaged app or a `.dmg` if you decide to distribute it that way.
 
-## Estructura
+## Structure
 
 ```text
 .
-├── app.go                 # Métodos expuestos a Wails
-├── config.go              # Lectura/escritura de config.json
-├── runner.go              # Ejecución visible en Terminal.app
-├── startup.go             # Login item de macOS
-├── main.go                # Wails, ventana y systray
+├── app.go                 # Methods exposed to Wails
+├── config.go              # config.json read/write logic
+├── runner.go              # Visible execution in Terminal.app
+├── startup.go             # macOS login item support
+├── main.go                # Wails, window, and menu bar setup
 ├── build/darwin/Info.plist
 ├── frontend/
 │   ├── index.html
@@ -196,6 +196,6 @@ git push origin v0.1.0
 └── wails.json
 ```
 
-## Notas de seguridad
+## Security Notes
 
-Mado-Tray ejecuta las rutas definidas en tu JSON. Usa rutas absolutas, revisa los scripts antes de activarlos y evita apuntar a archivos descargados de fuentes no confiables.
+Mado-Tray executes the paths defined in your JSON file. Use absolute paths, review scripts before enabling them, and avoid pointing to files downloaded from untrusted sources.
