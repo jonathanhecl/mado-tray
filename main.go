@@ -32,7 +32,7 @@ func main() {
 		// Dejamos que la app arranque visible y aplicamos el ocultado
 		// en domReady para evitar cierres prematuros en modo dev.
 		StartHidden:       false,
-		HideWindowOnClose: true,
+		HideWindowOnClose: false,
 		Assets:            assets,
 		BackgroundColour:  &options.RGBA{R: 18, G: 22, B: 30, A: 1},
 		OnStartup:         app.startup,
