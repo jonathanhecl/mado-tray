@@ -11,6 +11,8 @@
   <string>com.jonathanhecl.mado-tray</string>
   <key>CFBundleName</key>
   <string>Mado-Tray</string>
+  <key>CFBundleIconFile</key>
+  <string>iconfile</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
