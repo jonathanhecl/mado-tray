@@ -142,7 +142,9 @@ func (a *App) HideWindow() {
 	a.visible = false
 	a.mu.Unlock()
 	if ctx != nil {
-		wailsruntime.WindowHide(ctx)
+		// Ocultamos la aplicación completa para mantener coherencia con
+		// "Show All" / "Mostrar todas las ventanas" del menú de macOS.
+		wailsruntime.Hide(ctx)
 	}
 }
 
@@ -153,7 +155,13 @@ func (a *App) ShowWindow() {
 	a.mu.Unlock()
 
 	if ctx != nil {
+		// En macOS, tras ocultar la app puede quedar "hidden" a nivel aplicación.
+		// runtime.Show la vuelve al frente y luego mostramos la ventana.
+		wailsruntime.Show(ctx)
+		wailsruntime.WindowUnminimise(ctx)
 		wailsruntime.WindowShow(ctx)
+		wailsruntime.WindowSetAlwaysOnTop(ctx, true)
+		wailsruntime.WindowSetAlwaysOnTop(ctx, false)
 	}
 }
 
