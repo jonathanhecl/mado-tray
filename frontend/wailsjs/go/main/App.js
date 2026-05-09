@@ -38,6 +38,10 @@ export function RunScript(arg1) {
   return window['go']['main']['App']['RunScript'](arg1);
 }
 
+export function SetLocale(arg1) {
+  return window['go']['main']['App']['SetLocale'](arg1);
+}
+
 export function ShowWindow() {
   return window['go']['main']['App']['ShowWindow']();
 }

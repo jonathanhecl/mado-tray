@@ -4,16 +4,19 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type App struct {
-	ctx     context.Context
-	store   *ConfigStore
-	mu      sync.Mutex
-	visible bool
+	ctx      context.Context
+	store    *ConfigStore
+	mu       sync.Mutex
+	visible  bool
+	quitting bool
+	locale   string
 }
 
 func NewApp() (*App, error) {
@@ -25,6 +28,7 @@ func NewApp() (*App, error) {
 	return &App{
 		store:   store,
 		visible: true,
+		locale:  "en",
 	}, nil
 }
 
@@ -33,11 +37,8 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.mu.Unlock()
 
-	a.mu.Lock()
-	visible := a.visible
-	a.mu.Unlock()
-
-	initTray(a, !visible)
+	initTray(a)
+	a.SetLocale(preferredLocale())
 
 	scripts, err := a.store.LoadConfig()
 	if err != nil {
@@ -57,6 +58,14 @@ func (a *App) startup(ctx context.Context) {
 			}
 		}()
 	}
+}
+
+func preferredLocale() string {
+	lang := strings.ToLower(os.Getenv("LANG"))
+	if strings.HasPrefix(lang, "es") {
+		return "es"
+	}
+	return "en"
 }
 
 func (a *App) GetScripts() ([]Script, error) {
@@ -113,12 +122,10 @@ func (a *App) ToggleWindow() {
 
 	if visible {
 		wailsruntime.WindowHide(ctx)
-		showTrayIcon()
 		return
 	}
 
 	wailsruntime.WindowShow(ctx)
-	hideTrayIcon()
 }
 
 func (a *App) HideWindow() {
@@ -126,15 +133,9 @@ func (a *App) HideWindow() {
 	ctx := a.ctx
 	a.visible = false
 	a.mu.Unlock()
-
-	status, err := GetStartupStatus()
-	if err == nil && status.Enabled && ctx != nil {
+	if ctx != nil {
 		wailsruntime.WindowHide(ctx)
-		showTrayIcon()
-		return
 	}
-
-	a.Quit()
 }
 
 func (a *App) ShowWindow() {
@@ -145,13 +146,13 @@ func (a *App) ShowWindow() {
 
 	if ctx != nil {
 		wailsruntime.WindowShow(ctx)
-		hideTrayIcon()
 	}
 }
 
 func (a *App) Quit() {
 	a.mu.Lock()
 	ctx := a.ctx
+	a.quitting = true
 	a.mu.Unlock()
 
 	if ctx != nil {
@@ -163,17 +164,35 @@ func (a *App) Quit() {
 }
 
 func (a *App) beforeClose(ctx context.Context) bool {
-	status, err := GetStartupStatus()
-	if err != nil || !status.Enabled {
-		return false
-	}
-
 	a.mu.Lock()
+	quitting := a.quitting
 	a.ctx = ctx
 	a.visible = false
 	a.mu.Unlock()
 
+	if quitting {
+		return false
+	}
+
 	wailsruntime.WindowHide(ctx)
-	showTrayIcon()
 	return true
+}
+
+func (a *App) SetLocale(locale string) {
+	a.mu.Lock()
+	if locale == "es" {
+		a.locale = "es"
+	} else {
+		a.locale = "en"
+	}
+	a.mu.Unlock()
+
+	a.updateTrayLocale()
+}
+
+func (a *App) updateTrayLocale() {
+	a.mu.Lock()
+	locale := a.locale
+	a.mu.Unlock()
+	setTrayLocale(locale)
 }

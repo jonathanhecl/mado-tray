@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 34115",
+    "dev": "vite --host 127.0.0.1 --port 34116",
     "build": "tsc && vite build",
     "build:app": "bash scripts/build-app.sh",
     "preview": "vite preview"

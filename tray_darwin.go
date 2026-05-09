@@ -5,31 +5,31 @@ package main
 /*
 #cgo darwin CFLAGS: -x objective-c -fblocks
 #cgo darwin LDFLAGS: -framework Cocoa -framework UniformTypeIdentifiers
+#include <stdlib.h>
 void MadoTrayCreate(void);
 void MadoTrayShow(void);
 void MadoTrayHide(void);
+void MadoTraySetLocale(char* locale);
 */
 import "C"
 
-import "sync"
+import (
+	"sync"
+	"unsafe"
+)
 
 var (
 	trayOnce sync.Once
 	trayApp  *App
 )
 
-func initTray(app *App, visible bool) {
+func initTray(app *App) {
 	trayOnce.Do(func() {
 		trayApp = app
 		C.MadoTrayCreate()
 	})
-
-	if visible {
-		C.MadoTrayShow()
-		return
-	}
-
 	C.MadoTrayHide()
+	C.MadoTrayShow()
 }
 
 func showTrayIcon() {
@@ -37,12 +37,24 @@ func showTrayIcon() {
 }
 
 func hideTrayIcon() {
-	C.MadoTrayHide()
 }
 
-//export madoTrayToggle
-func madoTrayToggle() {
+func setTrayLocale(locale string) {
+	cLocale := C.CString(locale)
+	defer C.free(unsafe.Pointer(cLocale))
+	C.MadoTraySetLocale(cLocale)
+}
+
+//export madoTrayShow
+func madoTrayShow() {
 	if trayApp != nil {
-		trayApp.ToggleWindow()
+		trayApp.ShowWindow()
+	}
+}
+
+//export madoTrayExit
+func madoTrayExit() {
+	if trayApp != nil {
+		trayApp.Quit()
 	}
 }

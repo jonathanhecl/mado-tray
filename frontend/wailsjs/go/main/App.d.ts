@@ -20,6 +20,8 @@ export function Quit():Promise<void>;
 
 export function RunScript(arg1:string):Promise<void>;
 
+export function SetLocale(arg1:string):Promise<void>;
+
 export function ShowWindow():Promise<void>;
 
 export function ToggleScript(arg1:string,arg2:boolean):Promise<Array<main.Script>>;

@@ -2,8 +2,10 @@
 
 package main
 
-func initTray(app *App, visible bool) {}
+func initTray(app *App) {}
 
 func showTrayIcon() {}
 
 func hideTrayIcon() {}
+
+func setTrayLocale(locale string) {}

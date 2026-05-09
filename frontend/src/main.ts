@@ -11,6 +11,7 @@ type BackendMethod =
   | "GetStartupStatus"
   | "HideWindow"
   | "RunScript"
+  | "SetLocale"
   | "ToggleScript"
   | "UpdateScript";
 type ScriptForm = {
@@ -146,6 +147,12 @@ async function load(): Promise<void> {
   state.loading = true;
   state.error = "";
   render();
+
+  try {
+    await callBackend<void>("SetLocale", state.locale);
+  } catch {
+    // El backend puede no estar listo durante el primer render.
+  }
 
   try {
     const [scripts, startup] = await Promise.all([
@@ -495,6 +502,11 @@ appRoot.addEventListener("change", async (event) => {
     const locale = input.value === "en" ? "en" : "es";
     state.locale = locale;
     localStorage.setItem("mado-tray-locale", locale);
+    try {
+      await callBackend<void>("SetLocale", locale);
+    } catch {
+      // Si falla el backend, mantenemos al menos el idioma de la UI.
+    }
     render();
   }
 });
