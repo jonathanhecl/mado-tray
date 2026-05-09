@@ -63,9 +63,13 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) domReady(ctx context.Context) {
 	a.mu.Lock()
 	a.ctx = ctx
+	visible := a.visible
 	a.mu.Unlock()
 	showTrayIcon()
 	a.updateTrayLocale()
+	if !visible {
+		a.HideWindow()
+	}
 }
 
 func preferredLocale() string {

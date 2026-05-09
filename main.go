@@ -22,14 +22,16 @@ func main() {
 	app.visible = !startHidden
 
 	err = wails.Run(&options.App{
-		Title:             "Mado-Tray",
-		Width:             440,
-		Height:            640,
-		MinWidth:          360,
-		MinHeight:         520,
-		Frameless:         true,
-		DisableResize:     true,
-		StartHidden:       startHidden,
+		Title:         "Mado-Tray",
+		Width:         440,
+		Height:        640,
+		MinWidth:      360,
+		MinHeight:     520,
+		Frameless:     true,
+		DisableResize: true,
+		// Dejamos que la app arranque visible y aplicamos el ocultado
+		// en domReady para evitar cierres prematuros en modo dev.
+		StartHidden:       false,
 		HideWindowOnClose: true,
 		Assets:            assets,
 		BackgroundColour:  &options.RGBA{R: 18, G: 22, B: 30, A: 1},

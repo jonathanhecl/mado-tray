@@ -11,6 +11,7 @@ extern void madoTrayExit(void);
 
 @implementation MadoTrayMenuTarget
 - (void)showWindow:(id)sender {
+  [NSApp activateIgnoringOtherApps:YES];
   madoTrayShow();
 }
 
@@ -40,13 +41,6 @@ static NSString *MadoTrayExitLabel(void) {
 }
 
 static NSImage *MadoTrayIcon(void) {
-  if (@available(macOS 11.0, *)) {
-    NSImage *image = [NSImage imageWithSystemSymbolName:@"macwindow"
-                               accessibilityDescription:@"Mado-Tray"];
-    image.template = YES;
-    return image;
-  }
-
   return nil;
 }
 
@@ -79,14 +73,14 @@ void MadoTrayShow(void) {
       return;
     }
 
-    madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
+    madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
     madoTrayStatusItem.button.toolTip = @"Mado-Tray";
 
     NSImage *image = MadoTrayIcon();
     if (image != nil) {
       madoTrayStatusItem.button.image = image;
     } else {
-      madoTrayStatusItem.button.title = @"MT";
+      madoTrayStatusItem.button.title = @"🪟 Mado";
     }
     madoTrayStatusItem.visible = YES;
 
@@ -106,6 +100,7 @@ void MadoTrayShow(void) {
     [menu addItem:madoTrayExitItem];
 
     madoTrayStatusItem.menu = menu;
+    // Nota: mantenemos la policy por defecto para asegurar visibilidad en dev.
   });
 }
 

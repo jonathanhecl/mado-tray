@@ -28,7 +28,6 @@ func initTray(app *App) {
 		trayApp = app
 		C.MadoTrayCreate()
 	})
-	C.MadoTrayHide()
 	C.MadoTrayShow()
 }
 
