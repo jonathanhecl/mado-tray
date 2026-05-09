@@ -61,28 +61,39 @@ static void MadoTrayUpdateMenuTexts(void) {
 
 void MadoTrayCreate(void) {
   dispatch_async(dispatch_get_main_queue(), ^{
+    NSLog(@"[Mado-Tray] creating status bar target");
     MadoTrayEnsureTarget();
   });
 }
 
 void MadoTrayShow(void) {
   dispatch_async(dispatch_get_main_queue(), ^{
+    NSLog(@"[Mado-Tray] requested status bar item");
     MadoTrayEnsureTarget();
 
     if (madoTrayStatusItem != nil) {
+      NSLog(@"[Mado-Tray] status bar item already exists");
       return;
     }
 
-    madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
+    madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:32.0];
+    [madoTrayStatusItem retain];
+    NSLog(@"[Mado-Tray] status bar item created: %@", madoTrayStatusItem);
+    madoTrayStatusItem.autosaveName = @"com.jonathanhecl.mado-tray.status-item";
+    if (@available(macOS 10.12, *)) {
+      madoTrayStatusItem.behavior = 0;
+    }
     madoTrayStatusItem.button.toolTip = @"Mado-Tray";
 
     NSImage *image = MadoTrayIcon();
     if (image != nil) {
       madoTrayStatusItem.button.image = image;
     } else {
-      madoTrayStatusItem.button.title = @"🪟 Mado";
+      madoTrayStatusItem.button.title = @"▣";
     }
-    madoTrayStatusItem.visible = YES;
+    madoTrayStatusItem.button.enabled = YES;
+    madoTrayStatusItem.button.hidden = NO;
+    NSLog(@"[Mado-Tray] status bar item button: %@", madoTrayStatusItem.button);
 
     NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Mado-Tray"];
     madoTrayShowItem = [[NSMenuItem alloc] initWithTitle:MadoTrayShowLabel()
@@ -100,7 +111,13 @@ void MadoTrayShow(void) {
     [menu addItem:madoTrayExitItem];
 
     madoTrayStatusItem.menu = menu;
-    // Nota: mantenemos la policy por defecto para asegurar visibilidad en dev.
+    madoTrayStatusItem.length = 32.0;
+    madoTrayStatusItem.visible = YES;
+    madoTrayStatusItem.button.title = @"▣";
+    madoTrayStatusItem.button.enabled = YES;
+    madoTrayStatusItem.button.hidden = NO;
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+    NSLog(@"[Mado-Tray] status bar item configured with menu");
   });
 }
 
@@ -111,6 +128,7 @@ void MadoTrayHide(void) {
     }
 
     [[NSStatusBar systemStatusBar] removeStatusItem:madoTrayStatusItem];
+    [madoTrayStatusItem release];
     madoTrayStatusItem = nil;
     madoTrayShowItem = nil;
     madoTrayExitItem = nil;
