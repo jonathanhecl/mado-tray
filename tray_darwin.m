@@ -41,7 +41,44 @@ static NSString *MadoTrayExitLabel(void) {
 }
 
 static NSImage *MadoTrayIcon(void) {
-  return nil;
+  const CGFloat size = 18.0;
+  NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(size, size)];
+
+  [image lockFocus];
+  [[NSColor blackColor] setStroke];
+  [[NSColor blackColor] setFill];
+
+  NSBezierPath *window = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(2.0, 3.0, 14.0, 12.0)
+                                                        xRadius:3.0
+                                                        yRadius:3.0];
+  [window setLineWidth:1.7];
+  [window stroke];
+
+  NSBezierPath *header = [NSBezierPath bezierPath];
+  [header moveToPoint:NSMakePoint(3.0, 11.5)];
+  [header lineToPoint:NSMakePoint(15.0, 11.5)];
+  [header setLineWidth:1.2];
+  [header stroke];
+
+  [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(4.4, 12.7, 1.5, 1.5)] fill];
+  [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(6.8, 12.7, 1.5, 1.5)] fill];
+
+  NSBezierPath *row1 = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(6.0, 8.5, 7.8, 1.6)
+                                                       xRadius:0.8
+                                                       yRadius:0.8];
+  [row1 fill];
+
+  NSBezierPath *row2 = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(6.0, 5.8, 6.0, 1.6)
+                                                       xRadius:0.8
+                                                       yRadius:0.8];
+  [row2 fill];
+
+  [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(4.0, 8.4, 1.8, 1.8)] fill];
+  [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(4.0, 5.7, 1.8, 1.8)] fill];
+
+  [image unlockFocus];
+  image.template = YES;
+  return image;
 }
 
 static void MadoTrayEnsureTarget(void) {
@@ -61,24 +98,20 @@ static void MadoTrayUpdateMenuTexts(void) {
 
 void MadoTrayCreate(void) {
   dispatch_async(dispatch_get_main_queue(), ^{
-    NSLog(@"[Mado-Tray] creating status bar target");
     MadoTrayEnsureTarget();
   });
 }
 
 void MadoTrayShow(void) {
   dispatch_async(dispatch_get_main_queue(), ^{
-    NSLog(@"[Mado-Tray] requested status bar item");
     MadoTrayEnsureTarget();
 
     if (madoTrayStatusItem != nil) {
-      NSLog(@"[Mado-Tray] status bar item already exists");
       return;
     }
 
-    madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:32.0];
+    madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
     [madoTrayStatusItem retain];
-    NSLog(@"[Mado-Tray] status bar item created: %@", madoTrayStatusItem);
     madoTrayStatusItem.autosaveName = @"com.jonathanhecl.mado-tray.status-item";
     if (@available(macOS 10.12, *)) {
       madoTrayStatusItem.behavior = 0;
@@ -89,11 +122,10 @@ void MadoTrayShow(void) {
     if (image != nil) {
       madoTrayStatusItem.button.image = image;
     } else {
-      madoTrayStatusItem.button.title = @"▣";
+      madoTrayStatusItem.button.title = @"Mado";
     }
     madoTrayStatusItem.button.enabled = YES;
     madoTrayStatusItem.button.hidden = NO;
-    NSLog(@"[Mado-Tray] status bar item button: %@", madoTrayStatusItem.button);
 
     NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Mado-Tray"];
     madoTrayShowItem = [[NSMenuItem alloc] initWithTitle:MadoTrayShowLabel()
@@ -111,13 +143,11 @@ void MadoTrayShow(void) {
     [menu addItem:madoTrayExitItem];
 
     madoTrayStatusItem.menu = menu;
-    madoTrayStatusItem.length = 32.0;
+    madoTrayStatusItem.length = NSSquareStatusItemLength;
     madoTrayStatusItem.visible = YES;
-    madoTrayStatusItem.button.title = @"▣";
     madoTrayStatusItem.button.enabled = YES;
     madoTrayStatusItem.button.hidden = NO;
     [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
-    NSLog(@"[Mado-Tray] status bar item configured with menu");
   });
 }
 
