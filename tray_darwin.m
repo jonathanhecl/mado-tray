@@ -79,15 +79,16 @@ void MadoTrayShow(void) {
       return;
     }
 
-    madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
+    madoTrayStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
     madoTrayStatusItem.button.toolTip = @"Mado-Tray";
 
     NSImage *image = MadoTrayIcon();
     if (image != nil) {
       madoTrayStatusItem.button.image = image;
     } else {
-      madoTrayStatusItem.button.title = @"▣";
+      madoTrayStatusItem.button.title = @"MT";
     }
+    madoTrayStatusItem.visible = YES;
 
     NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Mado-Tray"];
     madoTrayShowItem = [[NSMenuItem alloc] initWithTitle:MadoTrayShowLabel()

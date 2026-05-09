@@ -11,12 +11,11 @@ import (
 )
 
 type App struct {
-	ctx      context.Context
-	store    *ConfigStore
-	mu       sync.Mutex
-	visible  bool
-	quitting bool
-	locale   string
+	ctx     context.Context
+	store   *ConfigStore
+	mu      sync.Mutex
+	visible bool
+	locale  string
 }
 
 func NewApp() (*App, error) {
@@ -38,6 +37,7 @@ func (a *App) startup(ctx context.Context) {
 	a.mu.Unlock()
 
 	initTray(a)
+	showTrayIcon()
 	a.SetLocale(preferredLocale())
 
 	scripts, err := a.store.LoadConfig()
@@ -58,6 +58,14 @@ func (a *App) startup(ctx context.Context) {
 			}
 		}()
 	}
+}
+
+func (a *App) domReady(ctx context.Context) {
+	a.mu.Lock()
+	a.ctx = ctx
+	a.mu.Unlock()
+	showTrayIcon()
+	a.updateTrayLocale()
 }
 
 func preferredLocale() string {
@@ -152,7 +160,6 @@ func (a *App) ShowWindow() {
 func (a *App) Quit() {
 	a.mu.Lock()
 	ctx := a.ctx
-	a.quitting = true
 	a.mu.Unlock()
 
 	if ctx != nil {
@@ -161,21 +168,6 @@ func (a *App) Quit() {
 	}
 
 	os.Exit(0)
-}
-
-func (a *App) beforeClose(ctx context.Context) bool {
-	a.mu.Lock()
-	quitting := a.quitting
-	a.ctx = ctx
-	a.visible = false
-	a.mu.Unlock()
-
-	if quitting {
-		return false
-	}
-
-	wailsruntime.WindowHide(ctx)
-	return true
 }
 
 func (a *App) SetLocale(locale string) {

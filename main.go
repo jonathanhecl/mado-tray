@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/options"
 )
 
@@ -21,18 +22,20 @@ func main() {
 	app.visible = !startHidden
 
 	err = wails.Run(&options.App{
-		Title:            "Mado-Tray",
-		Width:            440,
-		Height:           640,
-		MinWidth:         360,
-		MinHeight:        520,
-		Frameless:        true,
-		DisableResize:    true,
-		StartHidden:      startHidden,
-		Assets:           assets,
-		BackgroundColour: &options.RGBA{R: 18, G: 22, B: 30, A: 1},
-		OnStartup:        app.startup,
-		OnBeforeClose:    app.beforeClose,
+		Title:             "Mado-Tray",
+		Width:             440,
+		Height:            640,
+		MinWidth:          360,
+		MinHeight:         520,
+		Frameless:         true,
+		DisableResize:     true,
+		StartHidden:       startHidden,
+		HideWindowOnClose: true,
+		Assets:            assets,
+		BackgroundColour:  &options.RGBA{R: 18, G: 22, B: 30, A: 1},
+		OnStartup:         app.startup,
+		OnDomReady:        app.domReady,
+		Menu:              buildMenu(app),
 		SingleInstanceLock: &options.SingleInstanceLock{
 			UniqueId: "com.jonathanhecl.mado-tray",
 			OnSecondInstanceLaunch: func(_ options.SecondInstanceData) {
@@ -46,6 +49,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func buildMenu(app *App) *menu.Menu {
+	root := menu.NewMenu()
+	appMenu := root.AddSubmenu("Mado-Tray")
+	appMenu.AddText("Show", nil, func(_ *menu.CallbackData) {
+		app.ShowWindow()
+	})
+	appMenu.AddSeparator()
+	appMenu.AddText("Exit Mado-Tray", nil, func(_ *menu.CallbackData) {
+		app.Quit()
+	})
+	root.Append(menu.EditMenu())
+	return root
 }
 
 func shouldStartHidden() bool {
