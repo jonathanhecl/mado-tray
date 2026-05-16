@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const terminalTitlePrefix = "Mado-Tray"
+
 func RunInVisibleTerminal(scriptPath string) error {
 	if strings.TrimSpace(scriptPath) == "" {
 		return fmt.Errorf("la ruta del script está vacía")
@@ -18,13 +20,40 @@ func RunInVisibleTerminal(scriptPath string) error {
 		return err
 	}
 	appleScript := fmt.Sprintf(`tell application "Terminal"
-	do script "%s"
+	set madoTab to do script "%s"
+	set custom title of madoTab to "%s"
 	activate
-end tell`, escapeAppleScriptString(command))
+end tell`, escapeAppleScriptString(command), escapeAppleScriptString(terminalTitle(scriptPath)))
 
 	cmd := exec.Command("osascript", "-e", appleScript)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("abriendo Terminal.app: %w: %s", err, strings.TrimSpace(string(output)))
+	}
+
+	return nil
+}
+
+func CloseInactiveMadoTerminals() error {
+	appleScript := fmt.Sprintf(`if application "Terminal" is running then
+	tell application "Terminal"
+		repeat with windowIndex from (count of windows) to 1 by -1
+			set terminalWindow to window windowIndex
+			repeat with tabIndex from (count of tabs of terminalWindow) to 1 by -1
+				set terminalTab to tab tabIndex of terminalWindow
+				try
+					set tabTitle to custom title of terminalTab
+					if tabTitle starts with "%s" and busy of terminalTab is false then
+						close terminalTab
+					end if
+				end try
+			end repeat
+		end repeat
+	end tell
+end if`, escapeAppleScriptString(terminalTitlePrefix))
+
+	cmd := exec.Command("osascript", "-e", appleScript)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("cerrando terminales inactivas: %w: %s", err, strings.TrimSpace(string(output)))
 	}
 
 	return nil
@@ -53,6 +82,20 @@ func buildTerminalCommand(scriptPath string) (string, error) {
 	}
 
 	return strings.Join(quotedCommand, " "), nil
+}
+
+func terminalTitle(scriptPath string) string {
+	parts, err := splitShellWords(scriptPath)
+	if err != nil || len(parts) == 0 {
+		return terminalTitlePrefix
+	}
+
+	name := filepath.Base(filepath.Clean(parts[0]))
+	if name == "." || name == string(filepath.Separator) {
+		return terminalTitlePrefix
+	}
+
+	return fmt.Sprintf("%s: %s", terminalTitlePrefix, name)
 }
 
 func shellQuote(value string) string {

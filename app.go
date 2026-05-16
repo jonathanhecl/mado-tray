@@ -46,6 +46,10 @@ func (a *App) startup(ctx context.Context) {
 		return
 	}
 
+	if err := CloseInactiveMadoTerminals(); err != nil {
+		log.Printf("no se pudieron cerrar terminales inactivas de Mado-Tray: %v", err)
+	}
+
 	for _, script := range scripts {
 		if !script.IsActive {
 			continue
