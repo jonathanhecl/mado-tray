@@ -13,7 +13,10 @@ func RunInVisibleTerminal(scriptPath string) error {
 		return fmt.Errorf("la ruta del script está vacía")
 	}
 
-	command := buildTerminalCommand(scriptPath)
+	command, err := buildTerminalCommand(scriptPath)
+	if err != nil {
+		return err
+	}
 	appleScript := fmt.Sprintf(`tell application "Terminal"
 	do script "%s"
 	activate
@@ -27,15 +30,29 @@ end tell`, escapeAppleScriptString(command))
 	return nil
 }
 
-func buildTerminalCommand(scriptPath string) string {
-	cleanPath := filepath.Clean(scriptPath)
-	dir := filepath.Dir(cleanPath)
-
-	if _, err := os.Stat(cleanPath); err == nil {
-		return fmt.Sprintf("cd %s && %s", shellQuote(dir), shellQuote(cleanPath))
+func buildTerminalCommand(scriptPath string) (string, error) {
+	parts, err := splitShellWords(scriptPath)
+	if err != nil {
+		return "", fmt.Errorf("la ruta del script contiene comillas sin cerrar")
+	}
+	if len(parts) == 0 {
+		return "", fmt.Errorf("la ruta del script está vacía")
 	}
 
-	return shellQuote(cleanPath)
+	executable := filepath.Clean(parts[0])
+	args := parts[1:]
+	quotedCommand := make([]string, 0, len(parts))
+	quotedCommand = append(quotedCommand, shellQuote(executable))
+	for _, arg := range args {
+		quotedCommand = append(quotedCommand, shellQuote(arg))
+	}
+
+	if _, err := os.Stat(executable); err == nil {
+		dir := filepath.Dir(executable)
+		return fmt.Sprintf("cd %s && %s", shellQuote(dir), strings.Join(quotedCommand, " ")), nil
+	}
+
+	return strings.Join(quotedCommand, " "), nil
 }
 
 func shellQuote(value string) string {
@@ -45,4 +62,42 @@ func shellQuote(value string) string {
 func escapeAppleScriptString(value string) string {
 	value = strings.ReplaceAll(value, `\`, `\\`)
 	return strings.ReplaceAll(value, `"`, `\"`)
+}
+
+func splitShellWords(input string) ([]string, error) {
+	var parts []string
+	var current strings.Builder
+	inSingle := false
+	inDouble := false
+	escaped := false
+
+	for _, char := range strings.TrimSpace(input) {
+		switch {
+		case escaped:
+			current.WriteRune(char)
+			escaped = false
+		case char == '\\' && !inSingle:
+			escaped = true
+		case char == '\'' && !inDouble:
+			inSingle = !inSingle
+		case char == '"' && !inSingle:
+			inDouble = !inDouble
+		case (char == ' ' || char == '\t') && !inSingle && !inDouble:
+			if current.Len() > 0 {
+				parts = append(parts, current.String())
+				current.Reset()
+			}
+		default:
+			current.WriteRune(char)
+		}
+	}
+
+	if escaped || inSingle || inDouble {
+		return nil, fmt.Errorf("entrada inválida")
+	}
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
+	}
+
+	return parts, nil
 }
