@@ -25,6 +25,9 @@
   --error-bg: rgba(244, 135, 113, 0.1);
   --notice-fg: #89d185;
   --notice-bg: rgba(137, 209, 133, 0.1);
+  --run-fg: #1b2e1b;
+  --run-bg: #89d185;
+  --run-bg-hover: #9cdc98;
   --danger-fg: #f48771;
   --danger-bg: rgba(244, 135, 113, 0.12);
 
@@ -552,13 +555,14 @@ input:disabled {
   flex-shrink: 0;
   width: auto;
   margin-top: 0;
-  border-color: var(--border);
-  background: var(--bg-surface);
+  border-color: transparent;
+  color: var(--run-fg);
+  background: var(--run-bg);
 }
 
 .script-item .run-button:hover:not(:disabled) {
-  background: var(--bg-hover);
-  border-color: var(--border-strong);
+  background: var(--run-bg-hover);
+  border-color: transparent;
 }
 
 .script-item .switch {
