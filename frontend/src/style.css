@@ -87,11 +87,82 @@ input:disabled {
 }
 
 .panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
   background: var(--bg-base);
+}
+
+.toast-host {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(320px, calc(100% - 28px));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(28, 28, 28, 0.96);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  font-size: 12px;
+  line-height: 1.45;
+  animation: toast-in 160ms ease;
+}
+
+.toast-success {
+  border-color: rgba(137, 209, 133, 0.22);
+  color: var(--notice-fg);
+}
+
+.toast-error {
+  border-color: rgba(244, 135, 113, 0.22);
+  color: var(--error-fg);
+}
+
+.toast-message {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.toast-dismiss {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.toast-dismiss:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .titlebar {
@@ -202,27 +273,6 @@ input:disabled {
 .icon-button:hover:not(:disabled) {
   color: var(--text-primary);
   background: var(--bg-hover);
-}
-
-.message {
-  margin: 0 0 12px;
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.error {
-  color: var(--error-fg);
-  background: var(--error-bg);
-  border-color: rgba(244, 135, 113, 0.18);
-}
-
-.notice {
-  color: var(--notice-fg);
-  background: var(--notice-bg);
-  border-color: rgba(137, 209, 133, 0.18);
 }
 
 .form-card,

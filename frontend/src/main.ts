@@ -48,6 +48,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     appRemoved: "Mado-Tray fue removido del arranque de macOS.",
     backendUnavailable: "El backend de Wails todavía no está disponible.",
     cancel: "Cancelar",
+    acknowledge: "Aceptar",
     confirmDelete: "¿Eliminar este proceso de Mado-Tray?",
     confirmDeleteTitle: "Eliminar proceso",
     delete: "Eliminar",
@@ -89,6 +90,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     appRemoved: "Mado-Tray was removed from macOS startup.",
     backendUnavailable: "The Wails backend is not available yet.",
     cancel: "Cancel",
+    acknowledge: "OK",
     confirmDelete: "Delete this process from Mado-Tray?",
     confirmDeleteTitle: "Delete process",
     delete: "Delete",
@@ -151,6 +153,9 @@ if (!root) {
 
 const appRoot = root;
 
+let noticeTimer: ReturnType<typeof setTimeout> | null = null;
+let armedNotice = "";
+
 async function load(): Promise<void> {
   state.loading = true;
   state.error = "";
@@ -196,9 +201,6 @@ function render(): void {
       </header>
 
       <div class="panel-body">
-        ${state.error ? `<p class="message error">${escapeHtml(state.error)}</p>` : ""}
-        ${state.notice ? `<p class="message notice">${escapeHtml(state.notice)}</p>` : ""}
-
         <section class="scripts">
           <div class="section-title">
             <h2>${t("processes")}</h2>
@@ -215,8 +217,64 @@ function render(): void {
       ${state.isFormOpen ? renderFormModal() : ""}
       ${state.isOptionsOpen ? renderOptionsModal() : ""}
       ${state.deleteCandidateId ? renderDeleteModal() : ""}
+      ${renderToasts()}
     </main>
   `;
+
+  armNoticeDismiss();
+}
+
+function renderToasts(): string {
+  if (state.error) {
+    return `
+      <div class="toast-host">
+        <div class="toast toast-error" role="alert">
+          <span class="toast-message">${escapeHtml(state.error)}</span>
+          <button class="toast-dismiss" type="button" data-action="dismiss-error">${t("acknowledge")}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (!state.notice) {
+    return "";
+  }
+
+  return `
+    <div class="toast-host">
+      <div class="toast toast-success" role="status">
+        <span class="toast-message">${escapeHtml(state.notice)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function clearNoticeTimer(): void {
+  if (noticeTimer !== null) {
+    clearTimeout(noticeTimer);
+    noticeTimer = null;
+  }
+}
+
+function armNoticeDismiss(): void {
+  if (!state.notice || state.error) {
+    armedNotice = "";
+    clearNoticeTimer();
+    return;
+  }
+
+  if (state.notice === armedNotice && noticeTimer !== null) {
+    return;
+  }
+
+  armedNotice = state.notice;
+  clearNoticeTimer();
+  noticeTimer = setTimeout(() => {
+    noticeTimer = null;
+    armedNotice = "";
+    state.notice = "";
+    render();
+  }, 3000);
 }
 
 function renderDeleteModal(): string {
@@ -447,6 +505,12 @@ appRoot.addEventListener("click", async (event) => {
 
   if (action === "reload") {
     await load();
+    return;
+  }
+
+  if (action === "dismiss-error") {
+    state.error = "";
+    render();
     return;
   }
 
