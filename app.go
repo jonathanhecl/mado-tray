@@ -58,7 +58,17 @@ func (a *App) startup(ctx context.Context) {
 
 		current := script
 		go func() {
-			if err := RunInVisibleTerminal(ScriptCommand(current.Path, current.Args)); err != nil {
+			title := madoTerminalTitle(current.ID)
+			open, err := IsMadoTerminalOpen(title)
+			if err != nil {
+				log.Printf("no se pudo comprobar la terminal de %s: %v", current.Name, err)
+			} else if open {
+				log.Printf("terminal ya abierta para %s, omitiendo arranque automático", current.Name)
+				return
+			}
+
+			command := ScriptCommand(current.Path, current.Args)
+			if err := RunInVisibleTerminal(command, title); err != nil {
 				log.Printf("no se pudo ejecutar %s: %v", current.Name, err)
 			}
 		}()
@@ -111,7 +121,7 @@ func (a *App) RunScript(id string) error {
 		return err
 	}
 
-	if err := RunInVisibleTerminal(ScriptCommand(script.Path, script.Args)); err != nil {
+	if err := RunInVisibleTerminal(ScriptCommand(script.Path, script.Args), madoTerminalTitle(script.ID)); err != nil {
 		return err
 	}
 
