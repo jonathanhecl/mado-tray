@@ -485,11 +485,18 @@ input:disabled {
   max-width: 250px;
   margin-top: 3px;
   overflow: hidden;
-  color: var(--text-secondary);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.script-path {
+  color: var(--text-secondary);
+}
+
+.script-args {
+  color: var(--pattern-muted);
 }
 
 .run-button {

@@ -4,6 +4,7 @@ export namespace main {
 	    id: string;
 	    name: string;
 	    path: string;
+	    args?: string;
 	    is_active: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -15,12 +16,14 @@ export namespace main {
 	        this.id = source["id"];
 	        this.name = source["name"];
 	        this.path = source["path"];
+	        this.args = source["args"];
 	        this.is_active = source["is_active"];
 	    }
 	}
 	export class ScriptInput {
 	    name: string;
 	    path: string;
+	    args: string;
 	    is_active: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -31,6 +34,7 @@ export namespace main {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
 	        this.path = source["path"];
+	        this.args = source["args"];
 	        this.is_active = source["is_active"];
 	    }
 	}

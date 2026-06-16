@@ -80,6 +80,7 @@ If the file does not exist, Mado-Tray creates it with an initial example:
     "id": "example",
     "name": "Example script",
     "path": "/path/to/your/script.sh",
+    "args": "",
     "is_active": false
   }
 ]
@@ -90,6 +91,7 @@ Fields:
 - `id`: unique process identifier.
 - `name`: display name in the UI.
 - `path`: absolute path to the script or executable.
+- `args`: optional arguments passed to the command (for example `--port 3000`).
 - `is_active`: when `true`, Mado-Tray opens it automatically on startup.
 
 Real example:
@@ -100,12 +102,14 @@ Real example:
     "id": "api-local",
     "name": "API local",
     "path": "/Users/your_user/Projects/api/start.sh",
+    "args": "--port 3000",
     "is_active": true
   },
   {
     "id": "worker",
     "name": "Worker",
     "path": "/Users/your_user/Projects/worker/run.sh",
+    "args": "",
     "is_active": false
   }
 ]

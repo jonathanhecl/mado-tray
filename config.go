@@ -20,12 +20,14 @@ type Script struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Path     string `json:"path"`
+	Args     string `json:"args,omitempty"`
 	IsActive bool   `json:"is_active"`
 }
 
 type ScriptInput struct {
 	Name     string `json:"name"`
 	Path     string `json:"path"`
+	Args     string `json:"args"`
 	IsActive bool   `json:"is_active"`
 }
 
@@ -177,6 +179,10 @@ func (s *ConfigStore) loadConfigLocked() ([]Script, error) {
 		return nil, fmt.Errorf("el archivo %s no contiene una lista JSON válida: %w", s.path, err)
 	}
 
+	for i := range scripts {
+		scripts[i] = normalizeScript(scripts[i])
+	}
+
 	return scripts, nil
 }
 
@@ -235,9 +241,38 @@ func defaultScripts() []Script {
 			ID:       "example",
 			Name:     "Script de ejemplo",
 			Path:     "/ruta/a/tu/script.sh",
+			Args:     "",
 			IsActive: false,
 		},
 	}
+}
+
+func ScriptCommand(path, args string) string {
+	path = strings.TrimSpace(path)
+	args = strings.TrimSpace(args)
+	if args == "" {
+		return path
+	}
+	return path + " " + args
+}
+
+func normalizeScript(script Script) Script {
+	script.Name = strings.TrimSpace(script.Name)
+	script.Path = strings.TrimSpace(script.Path)
+	script.Args = strings.TrimSpace(script.Args)
+
+	if script.Args != "" {
+		return script
+	}
+
+	parts, err := splitShellWords(script.Path)
+	if err != nil || len(parts) <= 1 {
+		return script
+	}
+
+	script.Path = parts[0]
+	script.Args = strings.Join(parts[1:], " ")
+	return script
 }
 
 func validateScriptInput(input ScriptInput) (Script, error) {
@@ -251,9 +286,12 @@ func validateScriptInput(input ScriptInput) (Script, error) {
 		return Script{}, fmt.Errorf("la ruta del proceso es obligatoria")
 	}
 
+	args := strings.TrimSpace(input.Args)
+
 	return Script{
 		Name:     name,
 		Path:     path,
+		Args:     args,
 		IsActive: input.IsActive,
 	}, nil
 }

@@ -18,6 +18,7 @@ type BackendMethod =
 type ScriptForm = {
   name: string;
   path: string;
+  args: string;
   is_active: boolean;
 };
 
@@ -64,6 +65,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     options: "Opciones",
     path: "Ruta",
     pathPlaceholder: "/Users/tu_usuario/Proyectos/api/start.sh",
+    args: "Argumentos",
+    argsPlaceholder: "--port 3000",
     browsePath: "Explorar",
     processAdded: "Proceso agregado.",
     processDeleted: "Proceso eliminado.",
@@ -103,6 +106,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     options: "Options",
     path: "Path",
     pathPlaceholder: "/Users/your_user/Projects/api/start.sh",
+    args: "Arguments",
+    argsPlaceholder: "--port 3000",
     browsePath: "Browse",
     processAdded: "Process added.",
     processDeleted: "Process deleted.",
@@ -312,6 +317,17 @@ function renderFormModal(): string {
             </div>
           </label>
 
+          <label class="field">
+            <span>${t("args")}</span>
+            <input
+              name="args"
+              type="text"
+              value="${escapeHtml(state.form.args)}"
+              placeholder="${t("argsPlaceholder")}"
+              ${state.formBusy ? "disabled" : ""}
+            />
+          </label>
+
           <div class="form-row">
             <label class="inline-check">
               <input name="is_active" type="checkbox" ${state.form.is_active ? "checked" : ""} ${state.formBusy ? "disabled" : ""} />
@@ -348,13 +364,15 @@ function renderScripts(): string {
 
 function renderScript(script: main.Script): string {
   const busy = state.busyScriptId === script.id;
+  const args = script.args?.trim() ?? "";
 
   return `
     <li class="script-item">
       <div class="script-main">
         <div>
           <h3>${escapeHtml(script.name)}</h3>
-          <p title="${escapeHtml(script.path)}">${escapeHtml(script.path)}</p>
+          <p class="script-path" title="${escapeHtml(script.path)}">${escapeHtml(script.path)}</p>
+          ${args ? `<p class="script-args" title="${escapeHtml(args)}">${escapeHtml(args)}</p>` : ""}
         </div>
         <label class="switch">
           <input
@@ -545,11 +563,11 @@ async function pickScriptPath(): Promise<void> {
       return;
     }
 
-    state.form.path = mergePickedPath(state.form.path, picked);
+    state.form.path = picked;
     render();
 
     requestAnimationFrame(() => {
-      const input = appRoot.querySelector<HTMLInputElement>('input[name="path"]');
+      const input = appRoot.querySelector<HTMLInputElement>('input[name="args"]');
       if (!input) {
         return;
       }
@@ -571,6 +589,7 @@ function syncFormFromDom(): void {
 
   const nameInput = form.querySelector<HTMLInputElement>('input[name="name"]');
   const pathInput = form.querySelector<HTMLInputElement>('input[name="path"]');
+  const argsInput = form.querySelector<HTMLInputElement>('input[name="args"]');
   const activeInput = form.querySelector<HTMLInputElement>('input[name="is_active"]');
 
   if (nameInput) {
@@ -579,44 +598,12 @@ function syncFormFromDom(): void {
   if (pathInput) {
     state.form.path = pathInput.value;
   }
+  if (argsInput) {
+    state.form.args = argsInput.value;
+  }
   if (activeInput) {
     state.form.is_active = activeInput.checked;
   }
-}
-
-function mergePickedPath(currentPath: string, pickedPath: string): string {
-  const trimmed = currentPath.trim();
-  if (!trimmed) {
-    return pickedPath;
-  }
-
-  const trailingArgs = extractTrailingArgs(trimmed);
-  return trailingArgs ? `${pickedPath} ${trailingArgs}` : pickedPath;
-}
-
-function extractTrailingArgs(path: string): string {
-  if (path.startsWith('"')) {
-    const end = path.indexOf('"', 1);
-    if (end === -1) {
-      return "";
-    }
-    return path.slice(end + 1).trim();
-  }
-
-  if (path.startsWith("'")) {
-    const end = path.indexOf("'", 1);
-    if (end === -1) {
-      return "";
-    }
-    return path.slice(end + 1).trim();
-  }
-
-  const space = path.indexOf(" ");
-  if (space === -1) {
-    return "";
-  }
-
-  return path.slice(space + 1).trim();
 }
 
 async function toggleScript(id: string, isActive: boolean): Promise<void> {
@@ -642,6 +629,7 @@ async function submitScriptForm(form: HTMLFormElement): Promise<void> {
   const input = {
     name: String(formData.get("name") ?? "").trim(),
     path: String(formData.get("path") ?? "").trim(),
+    args: String(formData.get("args") ?? "").trim(),
     is_active: formData.get("is_active") === "on"
   };
   state.form = input;
@@ -690,6 +678,7 @@ function startEditing(id: string): void {
   state.form = {
     name: script.name,
     path: script.path,
+    args: script.args ?? "",
     is_active: script.is_active
   };
   state.error = "";
@@ -765,6 +754,7 @@ function emptyForm(): ScriptForm {
   return {
     name: "",
     path: "",
+    args: "",
     is_active: false
   };
 }

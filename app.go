@@ -58,7 +58,7 @@ func (a *App) startup(ctx context.Context) {
 
 		current := script
 		go func() {
-			if err := RunInVisibleTerminal(current.Path); err != nil {
+			if err := RunInVisibleTerminal(ScriptCommand(current.Path, current.Args)); err != nil {
 				log.Printf("no se pudo ejecutar %s: %v", current.Name, err)
 			}
 		}()
@@ -111,7 +111,7 @@ func (a *App) RunScript(id string) error {
 		return err
 	}
 
-	return RunInVisibleTerminal(script.Path)
+	return RunInVisibleTerminal(ScriptCommand(script.Path, script.Args))
 }
 
 func (a *App) GetStartupStatus() (StartupStatus, error) {
@@ -210,16 +210,31 @@ func (a *App) PickScriptPath() (string, error) {
 	}
 
 	title := "Select script or executable"
+	filters := []wailsruntime.FileFilter{
+		{DisplayName: "All files", Pattern: "*.*"},
+		{DisplayName: "Shell scripts (*.sh)", Pattern: "*.sh"},
+		{DisplayName: "Python (*.py)", Pattern: "*.py"},
+		{DisplayName: "Node.js (*.js, *.mjs, *.cjs)", Pattern: "*.js;*.mjs;*.cjs"},
+		{DisplayName: "Ruby (*.rb)", Pattern: "*.rb"},
+		{DisplayName: "Perl (*.pl)", Pattern: "*.pl"},
+		{DisplayName: "Executables (no extension)", Pattern: "*"},
+	}
 	if locale == "es" {
 		title = "Seleccionar script o ejecutable"
+		filters = []wailsruntime.FileFilter{
+			{DisplayName: "Todos los archivos", Pattern: "*.*"},
+			{DisplayName: "Scripts shell (*.sh)", Pattern: "*.sh"},
+			{DisplayName: "Python (*.py)", Pattern: "*.py"},
+			{DisplayName: "Node.js (*.js, *.mjs, *.cjs)", Pattern: "*.js;*.mjs;*.cjs"},
+			{DisplayName: "Ruby (*.rb)", Pattern: "*.rb"},
+			{DisplayName: "Perl (*.pl)", Pattern: "*.pl"},
+			{DisplayName: "Ejecutables (sin extensión)", Pattern: "*"},
+		}
 	}
 
 	return wailsruntime.OpenFileDialog(ctx, wailsruntime.OpenDialogOptions{
 		Title: title,
-		Filters: []wailsruntime.FileFilter{
-			{DisplayName: "Scripts (*.sh)", Pattern: "*.sh"},
-			{DisplayName: "All files (*.*)", Pattern: "*.*"},
-		},
+		Filters: filters,
 	})
 }
 
