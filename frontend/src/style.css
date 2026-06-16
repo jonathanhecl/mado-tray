@@ -416,7 +416,28 @@ input:disabled {
 
 .section-actions {
   display: flex;
+  align-items: center;
   gap: 6px;
+}
+
+.icon-action-button {
+  display: grid;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0;
+  color: var(--text-secondary);
+  background: transparent;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.icon-action-button:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .ghost-button,

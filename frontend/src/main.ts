@@ -204,7 +204,7 @@ function render(): void {
             <h2>${t("processes")}</h2>
             <div class="section-actions">
               <button class="primary-button" data-action="open-add-process">${t("addProcess")}</button>
-              <button class="ghost-button" data-action="reload" ${state.loading ? "disabled" : ""}>${t("reload")}</button>
+              <button class="icon-action-button" data-action="reload" title="${t("reload")}" aria-label="${t("reload")}" ${state.loading ? "disabled" : ""}>🔄</button>
             </div>
           </div>
 
