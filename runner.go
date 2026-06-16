@@ -22,7 +22,6 @@ func RunInVisibleTerminal(scriptPath string) error {
 	appleScript := fmt.Sprintf(`tell application "Terminal"
 	set madoTab to do script "%s"
 	set custom title of madoTab to "%s"
-	activate
 end tell`, escapeAppleScriptString(command), escapeAppleScriptString(terminalTitle(scriptPath)))
 
 	cmd := exec.Command("osascript", "-e", appleScript)

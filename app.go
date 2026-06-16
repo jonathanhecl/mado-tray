@@ -111,7 +111,12 @@ func (a *App) RunScript(id string) error {
 		return err
 	}
 
-	return RunInVisibleTerminal(ScriptCommand(script.Path, script.Args))
+	if err := RunInVisibleTerminal(ScriptCommand(script.Path, script.Args)); err != nil {
+		return err
+	}
+
+	a.ShowWindow()
+	return nil
 }
 
 func (a *App) GetStartupStatus() (StartupStatus, error) {
