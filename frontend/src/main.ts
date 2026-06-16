@@ -190,21 +190,12 @@ function render(): void {
           <span class="titlebar-title">MadoTray</span>
         </div>
         <div class="titlebar-controls">
+          <button class="titlebar-button titlebar-button-settings" data-action="open-options" title="${t("options")}" aria-label="${t("options")}">⚙</button>
           <button class="titlebar-button titlebar-button-close" data-action="hide" title="${t("hideWindow")}" aria-label="${t("hideWindow")}">×</button>
         </div>
       </header>
 
       <div class="panel-body">
-        <div class="toolbar">
-          <button class="ghost-button" data-action="open-options">${t("options")}</button>
-          <label class="language-select">
-            <select data-action="change-locale" aria-label="${t("language")}">
-              <option value="es" ${state.locale === "es" ? "selected" : ""}>ES</option>
-              <option value="en" ${state.locale === "en" ? "selected" : ""}>EN</option>
-            </select>
-          </label>
-        </div>
-
         ${state.error ? `<p class="message error">${escapeHtml(state.error)}</p>` : ""}
         ${state.notice ? `<p class="message notice">${escapeHtml(state.notice)}</p>` : ""}
 
@@ -259,20 +250,34 @@ function renderOptionsModal(): string {
           <button class="icon-button" type="button" data-action="close-options" title="${t("cancel")}">×</button>
         </div>
 
-        <div class="settings-row">
-          <div>
-            <h3>${t("macStartup")}</h3>
-            <p>${startupDescription()}</p>
+        <div class="settings-list">
+          <div class="settings-row">
+            <div>
+              <h3>${t("language")}</h3>
+            </div>
+            <label class="language-select">
+              <select data-action="change-locale" aria-label="${t("language")}">
+                <option value="es" ${state.locale === "es" ? "selected" : ""}>ES</option>
+                <option value="en" ${state.locale === "en" ? "selected" : ""}>EN</option>
+              </select>
+            </label>
           </div>
-          <label class="switch">
-            <input
-              type="checkbox"
-              data-action="toggle-startup"
-              ${state.startup?.enabled ? "checked" : ""}
-              ${state.startupBusy || !state.startup?.available ? "disabled" : ""}
-            />
-            <span></span>
-          </label>
+
+          <div class="settings-row">
+            <div>
+              <h3>${t("macStartup")}</h3>
+              <p>${startupDescription()}</p>
+            </div>
+            <label class="switch">
+              <input
+                type="checkbox"
+                data-action="toggle-startup"
+                ${state.startup?.enabled ? "checked" : ""}
+                ${state.startupBusy || !state.startup?.available ? "disabled" : ""}
+              />
+              <span></span>
+            </label>
+          </div>
         </div>
       </section>
     </div>

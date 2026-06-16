@@ -153,19 +153,15 @@ input:disabled {
   background: #c42b1c;
 }
 
+.titlebar-button-settings {
+  font-size: 14px;
+}
+
 .panel-body {
   flex: 1;
   overflow-x: hidden;
   overflow-y: auto;
   padding: 14px 16px 16px;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  margin-bottom: 14px;
 }
 
 .language-select {
@@ -374,6 +370,11 @@ input:disabled {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-input);
+}
+
+.settings-list {
+  display: grid;
+  gap: 8px;
 }
 
 .settings-row h3,
