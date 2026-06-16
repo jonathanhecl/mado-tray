@@ -30,6 +30,10 @@ export function HideWindow() {
   return window['go']['main']['App']['HideWindow']();
 }
 
+export function PickScriptPath() {
+  return window['go']['main']['App']['PickScriptPath']();
+}
+
 export function Quit() {
   return window['go']['main']['App']['Quit']();
 }

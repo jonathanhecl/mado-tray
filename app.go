@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -196,6 +197,30 @@ func (a *App) SetLocale(locale string) {
 	a.mu.Unlock()
 
 	a.updateTrayLocale()
+}
+
+func (a *App) PickScriptPath() (string, error) {
+	a.mu.Lock()
+	ctx := a.ctx
+	locale := a.locale
+	a.mu.Unlock()
+
+	if ctx == nil {
+		return "", fmt.Errorf("la aplicación todavía no está lista")
+	}
+
+	title := "Select script or executable"
+	if locale == "es" {
+		title = "Seleccionar script o ejecutable"
+	}
+
+	return wailsruntime.OpenFileDialog(ctx, wailsruntime.OpenDialogOptions{
+		Title: title,
+		Filters: []wailsruntime.FileFilter{
+			{DisplayName: "Scripts (*.sh)", Pattern: "*.sh"},
+			{DisplayName: "All files (*.*)", Pattern: "*.*"},
+		},
+	})
 }
 
 func (a *App) updateTrayLocale() {

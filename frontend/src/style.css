@@ -313,6 +313,21 @@ input:disabled {
   background: var(--bg-input);
 }
 
+.path-field {
+  display: flex;
+  gap: 6px;
+}
+
+.path-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+.path-browse-button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .field input:focus {
   border-color: var(--focus);
 }

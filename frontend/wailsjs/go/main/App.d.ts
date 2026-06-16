@@ -16,6 +16,8 @@ export function GetStartupStatus():Promise<main.StartupStatus>;
 
 export function HideWindow():Promise<void>;
 
+export function PickScriptPath():Promise<string>;
+
 export function Quit():Promise<void>;
 
 export function RunScript(arg1:string):Promise<void>;

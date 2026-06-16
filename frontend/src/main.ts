@@ -10,6 +10,7 @@ type BackendMethod =
   | "GetScripts"
   | "GetStartupStatus"
   | "HideWindow"
+  | "PickScriptPath"
   | "RunScript"
   | "SetLocale"
   | "ToggleScript"
@@ -63,6 +64,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     options: "Opciones",
     path: "Ruta",
     pathPlaceholder: "/Users/tu_usuario/Proyectos/api/start.sh",
+    browsePath: "Explorar",
     processAdded: "Proceso agregado.",
     processDeleted: "Proceso eliminado.",
     processes: "Procesos",
@@ -101,6 +103,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     options: "Options",
     path: "Path",
     pathPlaceholder: "/Users/your_user/Projects/api/start.sh",
+    browsePath: "Browse",
     processAdded: "Process added.",
     processDeleted: "Process deleted.",
     processes: "Processes",
@@ -295,13 +298,18 @@ function renderFormModal(): string {
 
           <label class="field">
             <span>${t("path")}</span>
-            <input
-              name="path"
-              type="text"
-              value="${escapeHtml(state.form.path)}"
-              placeholder="${t("pathPlaceholder")}"
-              ${state.formBusy ? "disabled" : ""}
-            />
+            <div class="path-field">
+              <input
+                name="path"
+                type="text"
+                value="${escapeHtml(state.form.path)}"
+                placeholder="${t("pathPlaceholder")}"
+                ${state.formBusy ? "disabled" : ""}
+              />
+              <button class="ghost-button path-browse-button" type="button" data-action="pick-path" ${state.formBusy ? "disabled" : ""}>
+                ${t("browsePath")}
+              </button>
+            </div>
           </label>
 
           <div class="form-row">
@@ -434,6 +442,12 @@ appRoot.addEventListener("click", async (event) => {
     return;
   }
 
+  if (action === "pick-path") {
+    syncFormFromDom();
+    await pickScriptPath();
+    return;
+  }
+
   if (action === "close-form") {
     if (button.classList.contains("modal-backdrop") && target.closest(".modal")) {
       return;
@@ -523,6 +537,87 @@ appRoot.addEventListener("submit", async (event) => {
   event.preventDefault();
   await submitScriptForm(form);
 });
+
+async function pickScriptPath(): Promise<void> {
+  try {
+    const picked = await callBackend<string>("PickScriptPath");
+    if (!picked) {
+      return;
+    }
+
+    state.form.path = mergePickedPath(state.form.path, picked);
+    render();
+
+    requestAnimationFrame(() => {
+      const input = appRoot.querySelector<HTMLInputElement>('input[name="path"]');
+      if (!input) {
+        return;
+      }
+
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
+  } catch (error) {
+    state.error = errorMessage(error);
+    render();
+  }
+}
+
+function syncFormFromDom(): void {
+  const form = appRoot.querySelector<HTMLFormElement>('form[data-action="script-form"]');
+  if (!form) {
+    return;
+  }
+
+  const nameInput = form.querySelector<HTMLInputElement>('input[name="name"]');
+  const pathInput = form.querySelector<HTMLInputElement>('input[name="path"]');
+  const activeInput = form.querySelector<HTMLInputElement>('input[name="is_active"]');
+
+  if (nameInput) {
+    state.form.name = nameInput.value;
+  }
+  if (pathInput) {
+    state.form.path = pathInput.value;
+  }
+  if (activeInput) {
+    state.form.is_active = activeInput.checked;
+  }
+}
+
+function mergePickedPath(currentPath: string, pickedPath: string): string {
+  const trimmed = currentPath.trim();
+  if (!trimmed) {
+    return pickedPath;
+  }
+
+  const trailingArgs = extractTrailingArgs(trimmed);
+  return trailingArgs ? `${pickedPath} ${trailingArgs}` : pickedPath;
+}
+
+function extractTrailingArgs(path: string): string {
+  if (path.startsWith('"')) {
+    const end = path.indexOf('"', 1);
+    if (end === -1) {
+      return "";
+    }
+    return path.slice(end + 1).trim();
+  }
+
+  if (path.startsWith("'")) {
+    const end = path.indexOf("'", 1);
+    if (end === -1) {
+      return "";
+    }
+    return path.slice(end + 1).trim();
+  }
+
+  const space = path.indexOf(" ");
+  if (space === -1) {
+    return "";
+  }
+
+  return path.slice(space + 1).trim();
+}
 
 async function toggleScript(id: string, isActive: boolean): Promise<void> {
   state.busyScriptId = id;
