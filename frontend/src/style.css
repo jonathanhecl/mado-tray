@@ -11,6 +11,7 @@
 
   --text-primary: #e4e4e7;
   --text-secondary: #858585;
+  --text-placeholder: rgba(228, 228, 231, 0.32);
   --pattern-muted: #6b6b6b;
 
   --accent: #e4e4e7;
@@ -330,6 +331,11 @@ input:disabled {
 
 .field input:focus {
   border-color: var(--focus);
+}
+
+.field input::placeholder {
+  color: var(--text-placeholder);
+  opacity: 1;
 }
 
 .form-row {
