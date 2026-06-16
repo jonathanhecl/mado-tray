@@ -270,9 +270,35 @@ func normalizeScript(script Script) Script {
 		return script
 	}
 
+	if !looksLikeExecutablePath(parts[0]) {
+		return script
+	}
+
 	script.Path = parts[0]
 	script.Args = strings.Join(parts[1:], " ")
 	return script
+}
+
+func looksLikeExecutablePath(token string) bool {
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return false
+	}
+
+	if strings.HasPrefix(token, "/") || strings.HasPrefix(token, "./") || strings.HasPrefix(token, "../") {
+		return true
+	}
+
+	if strings.Contains(token, "/") {
+		return true
+	}
+
+	switch strings.ToLower(filepath.Ext(token)) {
+	case ".sh", ".py", ".rb", ".pl", ".js", ".mjs", ".cjs", ".bash", ".zsh", ".command":
+		return true
+	}
+
+	return false
 }
 
 func validateScriptInput(input ScriptInput) (Script, error) {
@@ -288,12 +314,14 @@ func validateScriptInput(input ScriptInput) (Script, error) {
 
 	args := strings.TrimSpace(input.Args)
 
-	return Script{
+	script := Script{
 		Name:     name,
 		Path:     path,
 		Args:     args,
 		IsActive: input.IsActive,
-	}, nil
+	}
+
+	return normalizeScript(script), nil
 }
 
 func nextScriptID(scripts []Script, name string) string {

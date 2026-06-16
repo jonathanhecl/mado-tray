@@ -497,6 +497,8 @@ input:disabled {
 
 .script-item {
   padding: 8px 10px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .script-header {
@@ -504,9 +506,11 @@ input:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
 }
 
 .script-header h3 {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   font-size: 12px;
@@ -517,39 +521,45 @@ input:disabled {
 }
 
 .script-meta {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
+  display: grid;
+  gap: 2px;
   min-width: 0;
-  margin-top: 2px;
-  overflow: hidden;
+  margin-top: 3px;
 }
 
-.script-meta p {
+.script-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.script-line-label {
+  flex: 0 0 auto;
+  color: var(--pattern-muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.script-line-value {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
+  color: var(--text-secondary);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 10px;
-  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.script-path {
-  flex: 1 1 auto;
-  min-width: 0;
-  color: var(--text-secondary);
-}
-
-.script-args {
-  flex: 0 1 auto;
-  max-width: 45%;
+.script-args .script-line-value {
   color: var(--pattern-muted);
-}
-
-.script-args::before {
-  margin-right: 4px;
-  color: var(--pattern-muted);
-  content: "·";
 }
 
 .script-footer {
@@ -557,12 +567,15 @@ input:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
   margin-top: 7px;
 }
 
 .script-item .script-actions {
   display: flex;
+  flex: 1 1 auto;
   gap: 4px;
+  min-width: 0;
 }
 
 .script-item .ghost-button,
@@ -574,12 +587,15 @@ input:disabled {
 }
 
 .script-item .run-button {
-  flex-shrink: 0;
-  width: auto;
+  flex: 0 1 auto;
+  max-width: 46%;
   margin-top: 0;
+  overflow: hidden;
   border-color: transparent;
   color: var(--run-fg);
   background: var(--run-bg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .script-item .run-button:hover:not(:disabled) {

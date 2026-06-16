@@ -369,7 +369,9 @@ function renderScripts(): string {
 
 function renderScript(script: main.Script): string {
   const busy = state.busyScriptId === script.id;
+  const path = script.path?.trim() ?? "";
   const args = script.args?.trim() ?? "";
+  const commandTitle = args ? `${path} ${args}` : path;
 
   return `
     <li class="script-item">
@@ -387,15 +389,23 @@ function renderScript(script: main.Script): string {
         </label>
       </div>
       <div class="script-meta">
-        <p class="script-path" title="${escapeHtml(script.path)}">${escapeHtml(script.path)}</p>
-        ${args ? `<p class="script-args" title="${escapeHtml(args)}">${escapeHtml(args)}</p>` : ""}
+        <p class="script-line script-path" title="${escapeHtml(path)}">
+          <span class="script-line-label">${t("path")}</span>
+          <span class="script-line-value">${escapeHtml(path)}</span>
+        </p>
+        ${args ? `
+          <p class="script-line script-args" title="${escapeHtml(args)}">
+            <span class="script-line-label">${t("args")}</span>
+            <span class="script-line-value">${escapeHtml(args)}</span>
+          </p>
+        ` : ""}
       </div>
       <div class="script-footer">
         <div class="script-actions">
           <button class="ghost-button" data-action="edit-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>${t("edit")}</button>
           <button class="danger-button" data-action="delete-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>${t("delete")}</button>
         </div>
-        <button class="run-button" data-action="run-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>
+        <button class="run-button" data-action="run-script" data-id="${escapeHtml(script.id)}" title="${escapeHtml(commandTitle)}" ${busy ? "disabled" : ""}>
           ${busy ? t("running") : t("runNow")}
         </button>
       </div>
