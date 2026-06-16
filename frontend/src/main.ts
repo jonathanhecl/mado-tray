@@ -177,38 +177,41 @@ async function load(): Promise<void> {
 function render(): void {
   appRoot.innerHTML = `
     <main class="panel">
-      <header class="header">
-        <div>
-          <p class="eyebrow">${t("startupManager")}</p>
-          <h1>Mado-Tray</h1>
+      <header class="titlebar">
+        <div class="titlebar-drag">
+          <span class="titlebar-title">MadoTray</span>
         </div>
-        <div class="header-actions">
+        <div class="titlebar-controls">
+          <button class="titlebar-button titlebar-button-close" data-action="hide" title="${t("hideWindow")}" aria-label="${t("hideWindow")}">×</button>
+        </div>
+      </header>
+
+      <div class="panel-body">
+        <div class="toolbar">
           <button class="ghost-button" data-action="open-options">${t("options")}</button>
           <label class="language-select">
-            <span>${t("language")}</span>
-            <select data-action="change-locale">
+            <select data-action="change-locale" aria-label="${t("language")}">
               <option value="es" ${state.locale === "es" ? "selected" : ""}>ES</option>
               <option value="en" ${state.locale === "en" ? "selected" : ""}>EN</option>
             </select>
           </label>
-          <button class="icon-button" data-action="hide" title="${t("hideWindow")}">×</button>
         </div>
-      </header>
 
-      ${state.error ? `<p class="message error">${escapeHtml(state.error)}</p>` : ""}
-      ${state.notice ? `<p class="message notice">${escapeHtml(state.notice)}</p>` : ""}
+        ${state.error ? `<p class="message error">${escapeHtml(state.error)}</p>` : ""}
+        ${state.notice ? `<p class="message notice">${escapeHtml(state.notice)}</p>` : ""}
 
-      <section class="scripts">
-        <div class="section-title">
-          <h2>${t("processes")}</h2>
-          <div class="section-actions">
-            <button class="primary-button" data-action="open-add-process">${t("addProcess")}</button>
-            <button class="ghost-button" data-action="reload" ${state.loading ? "disabled" : ""}>${t("reload")}</button>
+        <section class="scripts">
+          <div class="section-title">
+            <h2>${t("processes")}</h2>
+            <div class="section-actions">
+              <button class="primary-button" data-action="open-add-process">${t("addProcess")}</button>
+              <button class="ghost-button" data-action="reload" ${state.loading ? "disabled" : ""}>${t("reload")}</button>
+            </div>
           </div>
-        </div>
 
-        ${renderScripts()}
-      </section>
+          ${renderScripts()}
+        </section>
+      </div>
 
       ${state.isFormOpen ? renderFormModal() : ""}
       ${state.isOptionsOpen ? renderOptionsModal() : ""}

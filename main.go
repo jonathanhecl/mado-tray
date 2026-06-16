@@ -34,7 +34,7 @@ func main() {
 		StartHidden:       false,
 		HideWindowOnClose: false,
 		Assets:            assets,
-		BackgroundColour:  &options.RGBA{R: 18, G: 22, B: 30, A: 1},
+		BackgroundColour:  &options.RGBA{R: 20, G: 20, B: 20, A: 1},
 		OnStartup:         app.startup,
 		OnDomReady:        app.domReady,
 		Menu:              buildMenu(app),
