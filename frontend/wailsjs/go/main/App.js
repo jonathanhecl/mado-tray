@@ -18,6 +18,10 @@ export function EnableStartup() {
   return window['go']['main']['App']['EnableStartup']();
 }
 
+export function GetScriptRunningStatus() {
+  return window['go']['main']['App']['GetScriptRunningStatus']();
+}
+
 export function GetScripts() {
   return window['go']['main']['App']['GetScripts']();
 }
@@ -28,6 +32,10 @@ export function GetStartupStatus() {
 
 export function HideWindow() {
   return window['go']['main']['App']['HideWindow']();
+}
+
+export function IsWindowVisible() {
+  return window['go']['main']['App']['IsWindowVisible']();
 }
 
 export function PickScriptPath() {

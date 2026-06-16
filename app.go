@@ -129,6 +129,34 @@ func (a *App) RunScript(id string) error {
 	return nil
 }
 
+func (a *App) IsWindowVisible() bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.visible
+}
+
+func (a *App) GetScriptRunningStatus() ([]ScriptRunningStatus, error) {
+	scripts, err := a.store.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	running, err := GetRunningMadoScriptIDs()
+	if err != nil {
+		return nil, err
+	}
+
+	statuses := make([]ScriptRunningStatus, len(scripts))
+	for i, script := range scripts {
+		statuses[i] = ScriptRunningStatus{
+			ID:      script.ID,
+			Running: running[script.ID],
+		}
+	}
+
+	return statuses, nil
+}
+
 func (a *App) GetStartupStatus() (StartupStatus, error) {
 	return GetStartupStatus()
 }

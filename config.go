@@ -31,6 +31,11 @@ type ScriptInput struct {
 	IsActive bool   `json:"is_active"`
 }
 
+type ScriptRunningStatus struct {
+	ID      string `json:"id"`
+	Running bool   `json:"running"`
+}
+
 type ConfigStore struct {
 	mu   sync.Mutex
 	path string

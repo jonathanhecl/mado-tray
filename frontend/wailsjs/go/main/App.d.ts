@@ -10,11 +10,15 @@ export function DisableStartup():Promise<main.StartupStatus>;
 
 export function EnableStartup():Promise<main.StartupStatus>;
 
+export function GetScriptRunningStatus():Promise<Array<main.ScriptRunningStatus>>;
+
 export function GetScripts():Promise<Array<main.Script>>;
 
 export function GetStartupStatus():Promise<main.StartupStatus>;
 
 export function HideWindow():Promise<void>;
+
+export function IsWindowVisible():Promise<boolean>;
 
 export function PickScriptPath():Promise<string>;
 

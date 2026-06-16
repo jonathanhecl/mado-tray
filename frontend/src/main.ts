@@ -7,9 +7,11 @@ type BackendMethod =
   | "DeleteScript"
   | "DisableStartup"
   | "EnableStartup"
+  | "GetScriptRunningStatus"
   | "GetScripts"
   | "GetStartupStatus"
   | "HideWindow"
+  | "IsWindowVisible"
   | "PickScriptPath"
   | "RunScript"
   | "SetLocale"
@@ -37,6 +39,7 @@ type State = {
   startupBusy: boolean;
   error: string;
   notice: string;
+  runningScripts: Record<string, boolean>;
 };
 
 type Dictionary = Record<string, string>;
@@ -80,7 +83,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     saveChanges: "Guardar cambios",
     startupDisabled: "Activa este switch para registrar la app como ítem de inicio.",
     startupManager: "Gestor de arranque macOS",
-    startWithMac: "Activo al iniciar",
+    statusRunning: "Terminal en ejecución",
+    statusIdle: "Sin terminal en ejecución",
     validationName: "Ingresa un nombre para el proceso.",
     validationPath: "Ingresa una ruta absoluta al script o ejecutable."
   },
@@ -122,7 +126,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     saveChanges: "Save changes",
     startupDisabled: "Enable this switch to register the app as a login item.",
     startupManager: "macOS startup manager",
-    startWithMac: "Active on startup",
+    statusRunning: "Terminal running",
+    statusIdle: "No running terminal",
     validationName: "Enter a process name.",
     validationPath: "Enter an absolute path to the script or executable."
   }
@@ -142,7 +147,8 @@ const state: State = {
   formBusy: false,
   startupBusy: false,
   error: "",
-  notice: ""
+  notice: "",
+  runningScripts: {}
 };
 
 const root = document.querySelector<HTMLDivElement>("#app");
@@ -155,6 +161,8 @@ const appRoot = root;
 
 let noticeTimer: ReturnType<typeof setTimeout> | null = null;
 let armedNotice = "";
+let runningStatusTimer: ReturnType<typeof setInterval> | null = null;
+const RUNNING_STATUS_INTERVAL_MS = 30_000;
 
 async function load(): Promise<void> {
   state.loading = true;
@@ -184,6 +192,7 @@ async function load(): Promise<void> {
   } finally {
     state.loading = false;
     render();
+    syncRunningStatusPoll();
   }
 }
 
@@ -430,11 +439,20 @@ function renderScript(script: main.Script): string {
   const path = script.path?.trim() ?? "";
   const args = script.args?.trim() ?? "";
   const commandTitle = args ? `${path} ${args}` : path;
+  const running = !!state.runningScripts[script.id];
 
   return `
     <li class="script-item">
       <div class="script-header">
-        <h3>${escapeHtml(script.name)}</h3>
+        <h3>
+          <span
+            class="script-status ${running ? "is-running" : ""}"
+            data-status-id="${escapeHtml(script.id)}"
+            title="${running ? t("statusRunning") : t("statusIdle")}"
+            aria-hidden="true"
+          ></span>
+          <span class="script-name">${escapeHtml(script.name)}</span>
+        </h3>
         <label class="switch">
           <input
             type="checkbox"
@@ -495,6 +513,7 @@ appRoot.addEventListener("click", async (event) => {
   }
 
   if (action === "hide") {
+    stopRunningStatusPoll();
     try {
       await callBackend<void>("HideWindow");
     } catch {
@@ -797,6 +816,7 @@ async function runScript(id: string): Promise<void> {
   try {
     await callBackend<void>("RunScript", id);
     state.notice = t("manualRunNotice");
+    void refreshRunningStatus();
   } catch (error) {
     state.error = errorMessage(error);
   } finally {
@@ -893,5 +913,78 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
+async function shouldPollRunningStatus(): Promise<boolean> {
+  try {
+    return await callBackend<boolean>("IsWindowVisible");
+  } catch {
+    return document.visibilityState === "visible";
+  }
+}
+
+function applyRunningBadges(): void {
+  for (const script of state.scripts) {
+    const badge = appRoot.querySelector<HTMLElement>(
+      `.script-status[data-status-id="${CSS.escape(script.id)}"]`
+    );
+    if (!badge) {
+      continue;
+    }
+
+    const running = !!state.runningScripts[script.id];
+    badge.classList.toggle("is-running", running);
+    badge.title = running ? t("statusRunning") : t("statusIdle");
+  }
+}
+
+async function refreshRunningStatus(): Promise<void> {
+  if (!(await shouldPollRunningStatus())) {
+    return;
+  }
+
+  try {
+    const statuses = await callBackend<main.ScriptRunningStatus[]>("GetScriptRunningStatus");
+    state.runningScripts = {};
+    for (const item of statuses) {
+      state.runningScripts[item.id] = item.running;
+    }
+    applyRunningBadges();
+  } catch {
+    // Ignore polling errors to avoid noisy UI while Terminal is unavailable.
+  }
+}
+
+function startRunningStatusPoll(): void {
+  if (runningStatusTimer !== null) {
+    return;
+  }
+
+  void refreshRunningStatus();
+  runningStatusTimer = setInterval(() => {
+    void refreshRunningStatus();
+  }, RUNNING_STATUS_INTERVAL_MS);
+}
+
+function stopRunningStatusPoll(): void {
+  if (runningStatusTimer === null) {
+    return;
+  }
+
+  clearInterval(runningStatusTimer);
+  runningStatusTimer = null;
+}
+
+function syncRunningStatusPoll(): void {
+  void shouldPollRunningStatus().then((visible) => {
+    if (visible) {
+      startRunningStatusPoll();
+      return;
+    }
+    stopRunningStatusPoll();
+  });
+}
+
+window.addEventListener("focus", () => syncRunningStatusPoll());
+document.addEventListener("visibilitychange", () => syncRunningStatusPoll());
 
 void load();

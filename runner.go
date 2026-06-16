@@ -45,6 +45,46 @@ return found`, escapeAppleScriptString(title))
 	return strings.TrimSpace(string(output)) == "true", nil
 }
 
+func GetRunningMadoScriptIDs() (map[string]bool, error) {
+	prefix := terminalTitlePrefix + ": "
+	appleScript := fmt.Sprintf(`set found to ""
+if application "Terminal" is running then
+	tell application "Terminal"
+		repeat with terminalWindow in windows
+			repeat with terminalTab in tabs of terminalWindow
+				try
+					set tabTitle to custom title of terminalTab
+					if tabTitle starts with "%s" and busy of terminalTab is true then
+						if found is not "" then set found to found & linefeed
+						set found to found & tabTitle
+					end if
+				end try
+			end repeat
+		end repeat
+	end tell
+end if
+return found`, escapeAppleScriptString(prefix))
+
+	output, err := exec.Command("osascript", "-e", appleScript).Output()
+	if err != nil {
+		return nil, fmt.Errorf("querying Terminal.app: %w", err)
+	}
+
+	running := make(map[string]bool)
+	for _, line := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+		title := strings.TrimSpace(line)
+		if !strings.HasPrefix(title, prefix) {
+			continue
+		}
+		id := strings.TrimSpace(title[len(prefix):])
+		if id != "" {
+			running[id] = true
+		}
+	}
+
+	return running, nil
+}
+
 func RunInVisibleTerminal(scriptPath, title string) error {
 	if strings.TrimSpace(scriptPath) == "" {
 		return fmt.Errorf("la ruta del script está vacía")

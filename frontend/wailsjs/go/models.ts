@@ -38,6 +38,20 @@ export namespace main {
 	        this.is_active = source["is_active"];
 	    }
 	}
+	export class ScriptRunningStatus {
+	    id: string;
+	    running: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new ScriptRunningStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.running = source["running"];
+	    }
+	}
 	export class StartupStatus {
 	    enabled: boolean;
 	    app_path: string;
