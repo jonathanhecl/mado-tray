@@ -43,12 +43,12 @@ func (a *App) startup(ctx context.Context) {
 
 	scripts, err := a.store.LoadConfig()
 	if err != nil {
-		log.Printf("no se pudo cargar la configuración: %v", err)
+		log.Printf("could not load configuration: %v", err)
 		return
 	}
 
 	if err := CloseInactiveMadoTerminals(); err != nil {
-		log.Printf("no se pudieron cerrar terminales inactivas de Mado-Tray: %v", err)
+		log.Printf("could not close inactive Mado-Tray terminals: %v", err)
 	}
 
 	for _, script := range scripts {
@@ -61,15 +61,15 @@ func (a *App) startup(ctx context.Context) {
 			title := madoTerminalTitle(current.ID)
 			open, err := IsMadoTerminalOpen(title)
 			if err != nil {
-				log.Printf("no se pudo comprobar la terminal de %s: %v", current.Name, err)
+				log.Printf("could not check terminal for %s: %v", current.Name, err)
 			} else if open {
-				log.Printf("terminal ya abierta para %s, omitiendo arranque automático", current.Name)
+				log.Printf("terminal already open for %s, skipping automatic startup", current.Name)
 				return
 			}
 
 			command := ScriptCommand(current.Path, current.Args)
 			if err := RunInVisibleTerminal(command, title); err != nil {
-				log.Printf("no se pudo ejecutar %s: %v", current.Name, err)
+				log.Printf("could not run %s: %v", current.Name, err)
 			}
 		}()
 	}
