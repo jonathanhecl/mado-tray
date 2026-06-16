@@ -40,6 +40,14 @@ static NSString *MadoTrayExitLabel(void) {
   return @"Exit Mado-Tray";
 }
 
+static void MadoTrayStrokeLine(NSPoint from, NSPoint to, CGFloat width) {
+  NSBezierPath *line = [NSBezierPath bezierPath];
+  [line moveToPoint:from];
+  [line lineToPoint:to];
+  [line setLineWidth:width];
+  [line stroke];
+}
+
 static NSImage *MadoTrayIcon(void) {
   const CGFloat size = 18.0;
   NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(size, size)];
@@ -48,33 +56,26 @@ static NSImage *MadoTrayIcon(void) {
   [[NSColor blackColor] setStroke];
   [[NSColor blackColor] setFill];
 
-  NSBezierPath *window = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(2.0, 3.0, 14.0, 12.0)
-                                                        xRadius:3.0
-                                                        yRadius:3.0];
-  [window setLineWidth:1.7];
-  [window stroke];
+  // Marco exterior de ventana japonesa (mado / shoji).
+  NSBezierPath *frame = [NSBezierPath bezierPathWithRect:NSMakeRect(1.5, 2.0, 15.0, 14.0)];
+  [frame setLineWidth:1.3];
+  [frame stroke];
 
-  NSBezierPath *header = [NSBezierPath bezierPath];
-  [header moveToPoint:NSMakePoint(3.0, 11.5)];
-  [header lineToPoint:NSMakePoint(15.0, 11.5)];
-  [header setLineWidth:1.2];
-  [header stroke];
+  // Kamoi: travesaño superior más grueso.
+  NSBezierPath *topRail = [NSBezierPath bezierPathWithRect:NSMakeRect(2.0, 13.2, 14.0, 2.2)];
+  [topRail fill];
 
-  [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(4.4, 12.7, 1.5, 1.5)] fill];
-  [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(6.8, 12.7, 1.5, 1.5)] fill];
+  // Shikii: umbral inferior.
+  NSBezierPath *bottomRail = [NSBezierPath bezierPathWithRect:NSMakeRect(2.0, 2.0, 14.0, 1.4)];
+  [bottomRail fill];
 
-  NSBezierPath *row1 = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(6.0, 8.5, 7.8, 1.6)
-                                                       xRadius:0.8
-                                                       yRadius:0.8];
-  [row1 fill];
+  // Montantes laterales del enrejado.
+  MadoTrayStrokeLine(NSMakePoint(6.2, 3.6), NSMakePoint(6.2, 12.8), 1.0);
+  MadoTrayStrokeLine(NSMakePoint(11.8, 3.6), NSMakePoint(11.8, 12.8), 1.0);
 
-  NSBezierPath *row2 = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(6.0, 5.8, 6.0, 1.6)
-                                                       xRadius:0.8
-                                                       yRadius:0.8];
-  [row2 fill];
-
-  [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(4.0, 8.4, 1.8, 1.8)] fill];
-  [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(4.0, 5.7, 1.8, 1.8)] fill];
+  // Travesaños horizontales del shoji (tres filas de paneles).
+  MadoTrayStrokeLine(NSMakePoint(2.4, 10.2), NSMakePoint(15.6, 10.2), 0.9);
+  MadoTrayStrokeLine(NSMakePoint(2.4, 7.0), NSMakePoint(15.6, 7.0), 0.9);
 
   [image unlockFocus];
   image.template = YES;
