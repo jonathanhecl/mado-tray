@@ -368,12 +368,8 @@ function renderScript(script: main.Script): string {
 
   return `
     <li class="script-item">
-      <div class="script-main">
-        <div>
-          <h3>${escapeHtml(script.name)}</h3>
-          <p class="script-path" title="${escapeHtml(script.path)}">${escapeHtml(script.path)}</p>
-          ${args ? `<p class="script-args" title="${escapeHtml(args)}">${escapeHtml(args)}</p>` : ""}
-        </div>
+      <div class="script-header">
+        <h3>${escapeHtml(script.name)}</h3>
         <label class="switch">
           <input
             type="checkbox"
@@ -385,13 +381,19 @@ function renderScript(script: main.Script): string {
           <span></span>
         </label>
       </div>
-      <div class="script-actions">
-        <button class="ghost-button" data-action="edit-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>${t("edit")}</button>
-        <button class="danger-button" data-action="delete-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>${t("delete")}</button>
+      <div class="script-meta">
+        <p class="script-path" title="${escapeHtml(script.path)}">${escapeHtml(script.path)}</p>
+        ${args ? `<p class="script-args" title="${escapeHtml(args)}">${escapeHtml(args)}</p>` : ""}
       </div>
-      <button class="run-button" data-action="run-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>
-        ${busy ? t("running") : t("runNow")}
-      </button>
+      <div class="script-footer">
+        <div class="script-actions">
+          <button class="ghost-button" data-action="edit-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>${t("edit")}</button>
+          <button class="danger-button" data-action="delete-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>${t("delete")}</button>
+        </div>
+        <button class="run-button" data-action="run-script" data-id="${escapeHtml(script.id)}" ${busy ? "disabled" : ""}>
+          ${busy ? t("running") : t("runNow")}
+        </button>
+      </div>
     </li>
   `;
 }
